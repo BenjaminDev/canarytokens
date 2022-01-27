@@ -211,7 +211,7 @@ class ChannelDNS(InputChannel):
         data['windows_desktopini_access_domain'] = domain
         return data
 
-    def _log4_shell(self, computer_name=None):
+    def _log4_shell(self, computer_name=""):
         data = {}
         if len(computer_name) <= 1:
             computer_name = 'Not Obtained'

@@ -39,7 +39,7 @@ import datetime
 import tempfile
 import hashlib
 import os
-from cStringIO import StringIO
+from io import StringIO
 import csv
 import wireguard as wg
 
@@ -434,7 +434,7 @@ class DownloadPage(resource.Resource):
 
                 details = set()
                 for key in incident_list:
-                    for element in incident_list[key].keys():
+                    for element in list(incident_list[key].keys()):
                         details.add(element)
                 details = list(details)
 
@@ -526,7 +526,7 @@ class ManagePage(resource.Resource):
             if not canarydrop['auth'] or canarydrop['auth'] != auth:
                 raise NoCanarytokenPresent()
             if canarydrop.get('triggered_list', None):
-                for timestamp in canarydrop['triggered_list'].keys():
+                for timestamp in list(canarydrop['triggered_list'].keys()):
                     formatted_timestamp = datetime.datetime.fromtimestamp(
                                 float(timestamp)).strftime('%Y %b %d %H:%M:%S (UTC)')
                     canarydrop['triggered_list'][formatted_timestamp] = canarydrop['triggered_list'].pop(timestamp)
@@ -615,13 +615,13 @@ class HistoryPage(resource.Resource):
             if not canarydrop['auth'] or canarydrop['auth'] != auth:
                 raise NoCanarytokenPresent()
             if canarydrop.get('triggered_list', None):
-                for timestamp in canarydrop['triggered_list'].keys():
+                for timestamp in list(canarydrop['triggered_list'].keys()):
                     formatted_timestamp = datetime.datetime.fromtimestamp(
                                 float(timestamp)).strftime('%Y %b %d %H:%M:%S.%f (UTC)')
                     canarydrop['triggered_list'][formatted_timestamp] = canarydrop['triggered_list'].pop(timestamp)
 
             if canarydrop.get('memo'):
-                canarydrop['memo'] = unicode(canarydrop['memo'], "utf8")
+                canarydrop['memo'] = str(canarydrop['memo'], "utf8")
 
         except (TypeError, NoCanarytokenPresent):
             return NoResource().render(request)

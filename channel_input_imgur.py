@@ -77,10 +77,10 @@ class ChannelImgur(InputChannel):
     def format_additional_data(self, **kwargs):
         log.info(kwargs)
         additional_report = ''
-        if kwargs.has_key('count') and kwargs['count']:
+        if 'count' in kwargs and kwargs['count']:
             additional_report += 'View Count: {count}\r\n'.format(
                                                 count=kwargs['count'])
-        if kwargs.has_key('imgur_id') and kwargs['imgur_id']:
+        if 'imgur_id' in kwargs and kwargs['imgur_id']:
             additional_report += 'Link: http://imgur.com/{imgur_id}\r\n'.format(
                                                 imgur_id=kwargs['imgur_id'])
         return additional_report

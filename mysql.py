@@ -6,7 +6,7 @@ import base64
 import gzip
 from zipfile import ZipFile, ZipInfo
 from ziplib import MODE_DIRECTORY
-from cStringIO import StringIO
+from io import StringIO
 import random
 
 from settings import CANARY_MYSQL_DUMP_TEMPLATE
@@ -75,7 +75,7 @@ def make_canary_mysql_dump(canarydrop=None, template=MYSQL_DUMP, encoded=True):
     else:
         sql_statement = _make_decoded_sql_statement(magic_sauce)
 
-    table_count = random.choice(range(MIN_TABLE_COUNT, len(TABLE_LIST) + 1))
+    table_count = random.choice(list(range(MIN_TABLE_COUNT, len(TABLE_LIST) + 1)))
     tables = random.sample(TABLE_LIST, table_count)
 
     with open(template, 'r') as f:

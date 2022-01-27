@@ -23,7 +23,7 @@ class Switchboard(object):
         formatters -- a dict in the form { TYPE: METHOD,...} used to lookup
                       the channel's format method depending on the alert type
         """
-        if self.input_channels.has_key(name):
+        if name in self.input_channels:
             raise DuplicateChannel()
 
         self.input_channels[name] = channel
@@ -36,7 +36,7 @@ class Switchboard(object):
         formatters -- a dict in the form { TYPE: METHOD,...} used to lookup
                       the channel's format method depending on the alert type
         """
-        if self.output_channels.has_key(name):
+        if name in self.output_channels:
             raise DuplicateChannel()
 
         self.output_channels[name] = channel
@@ -54,7 +54,7 @@ class Switchboard(object):
         **kwargs -- passed to the channel instance's formatter methods
         """
         try:
-            if not self.input_channels.has_key(input_channel):
+            if input_channel not in self.input_channels:
                 raise InvalidChannel()
 
             canarydrop.add_canarydrop_hit(input_channel=input_channel, **kwargs)

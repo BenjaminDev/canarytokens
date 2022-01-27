@@ -63,10 +63,10 @@ class ChannelLinkedIn(InputChannel):
     def format_additional_data(self, **kwargs):
         log.info(kwargs)
         additional_report = ''
-        if kwargs.has_key('count') and kwargs['count']:
+        if 'count' in kwargs and kwargs['count']:
             additional_report += 'View Count: {count}\r\n'.format(
                                                 count=kwargs['count'])
-        if kwargs.has_key('linkedin_username') and kwargs['linkedin_username']:
+        if 'linkedin_username' in kwargs and kwargs['linkedin_username']:
             additional_report += 'LinkedIn User: {username}\r\n'.format(
                                                 username=kwargs['linkedin_username'])
         return additional_report

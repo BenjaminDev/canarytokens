@@ -24,7 +24,7 @@ class CanaryMessageDelivery:
     implements(smtp.IMessageDelivery)
 
     def __init__(self):
-        print 'Created CanaryMessageDelivery()'
+        print('Created CanaryMessageDelivery()')
 
     def receivedHeader(self, helo, origin, recipients):
         return "Received: CanaryMessageDelivery"
@@ -82,14 +82,14 @@ class CanaryMessage:
                 self.stored_byte_count ++ len(line)
 
     def eomReceived(self):
-        print "New message received:"
+        print("New message received:")
         self.esmtp.mail['headers'] = self.headers
-        print "\n".join(self.headers)
+        print("\n".join(self.headers))
         self.esmtp.mail['links'] = self.links_re.findall(
                                    '\r\n'.join(self.lines))
-        print "\n".join(self.links)
+        print("\n".join(self.links))
         self.esmtp.mail['attachments'] = [ '\n'.join(x) for x in self.attachments]
-        print '\n\n'.join([ '\n'.join(x) for x in self.attachments])
+        print('\n\n'.join([ '\n'.join(x) for x in self.attachments]))
         self.lines = None
         self.esmtp.dispatch()
         #return defer.succeed(None)
@@ -168,9 +168,9 @@ class CanarySMTPFactory(smtp.SMTPFactory, InputChannel):
 
     def format_additional_data(self, **kwargs):
         log.info(kwargs)
-        if kwargs.has_key('src_ip') and kwargs['src_ip']:
+        if 'src_ip' in kwargs and kwargs['src_ip']:
             additional_report = 'Source IP : {ip}'.format(ip=kwargs['src_ip'])
-        if kwargs.has_key('mail') and kwargs['mail']:
+        if 'mail' in kwargs and kwargs['mail']:
             mail = kwargs['mail']
             additional_report += """
 Client Name : {client_name}

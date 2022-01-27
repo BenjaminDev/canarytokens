@@ -182,7 +182,7 @@ class mTLS(basic.LineReceiver):
             return {"f": mTLS._get_digest(dump_certificate(FILETYPE_PEM, x509)), "c": b64_cert, "k": b64_key}
 
         except Exception as e:
-            print "Exception: {}".format(e)
+            print("Exception: {}".format(e))
             return None
 
     @staticmethod
@@ -245,7 +245,7 @@ class ChannelKubeConfig():
         _hits = get_kc_hits(aggregation_key)
         hits = {} if not _hits[0] else json.loads(_hits[0]['hits'])
         path = trigger['location']
-        offset = long(round(time()*1000))
+        offset = int(round(time()*1000))
 
         if not hits or path not in hits:
             hits[path] = {'count': 1, 'first_seen': offset}
@@ -255,7 +255,7 @@ class ChannelKubeConfig():
             save_kc_hit_for_aggregation(aggregation_key, json.dumps(hits), update=True)
 
         hit_count = int(hits[path]['count'])
-        observation_time =  offset - long(hits[path]['first_seen'])
+        observation_time =  offset - int(hits[path]['first_seen'])
         unit_string = "seconds" if observation_time/1000.0 > 1 else "second"
         request_count = "{} in the last ~{} {}".format(hit_count, int(ceil(observation_time/1000.0)), unit_string) if observation_time > 0 else str(hit_count)
 

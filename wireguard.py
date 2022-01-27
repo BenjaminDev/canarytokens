@@ -110,7 +110,7 @@ class WireGuardProtocol(DatagramProtocol):
         # Random test key
         import random
         device = random.choice(self.devices)
-        print "Console public key: ", device.privateKey.public_key.encode(encoder=nacl.encoding.Base64Encoder)
+        print("Console public key: ", device.privateKey.public_key.encode(encoder=nacl.encoding.Base64Encoder))
 
     def datagramReceived(self, data, src):
         # Supports only the Initiation message of WireGuard protocol

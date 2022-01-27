@@ -115,7 +115,7 @@ class CanarytokenPage(resource.Resource, InputChannel):
                 canarydrop._drop['hit_time'] = datetime.datetime.utcnow().strftime("%s.%f")
                 useragent = request.args.get('user_agent', [None])[0]
                 src_ip    = request.args.get('ip', [None])[0]
-                additional_info = {'Slack Log Data': {k:v for k,v in request.args.iteritems() if k not in ['user_agent', 'ip']}}
+                additional_info = {'Slack Log Data': {k:v for k,v in request.args.items() if k not in ['user_agent', 'ip']}}
                 self.dispatch(canarydrop=canarydrop, src_ip=src_ip, useragent=useragent, additional_info=additional_info)
                 return self.GIF
 
@@ -125,7 +125,7 @@ class CanarytokenPage(resource.Resource, InputChannel):
                 src_ip    = request.args.get('ip', [None])[0]
                 safety_net = request.args.get('safety_net', [None])[0]
                 last_used  = request.args.get('last_used', [None])[0]
-                additional_info = {'AWS Key Log Data': {k:v for k,v in request.args.iteritems() if k not in ['user_agent', 'ip', 'safety_net', 'last_used']}}
+                additional_info = {'AWS Key Log Data': {k:v for k,v in request.args.items() if k not in ['user_agent', 'ip', 'safety_net', 'last_used']}}
                 if safety_net and last_used:
                     additional_info['AWS Key Log Data']['Safety Net'] = 'The API key was used on an untracked AWS API, last recorded at {}'.format(last_used)
 
@@ -138,7 +138,7 @@ class CanarytokenPage(resource.Resource, InputChannel):
                     try:
                         canarydrop._drop['hit_time'] = datetime.datetime.utcnow().strftime("%s.%f")
                         src_ip    = request.args['RemoteIP'][0]
-                        additional_info = {'AWS Log Data': {k:v for k,v in request.args.iteritems() if k not in ['key','src_ip']}}
+                        additional_info = {'AWS Log Data': {k:v for k,v in request.args.items() if k not in ['key','src_ip']}}
                         self.dispatch(canarydrop=canarydrop, src_ip=src_ip,
                                       additional_info=additional_info)
                     except Exception as e:
@@ -177,7 +177,7 @@ class CanarytokenPage(resource.Resource, InputChannel):
                     except Exception as e:
                         log.error('Error in secretkeeper_photo post: {error}'.format(error=e))
                 else:
-                    additional_info = {k:v for k,v in request.args.iteritems() if k not in ['key','canarytoken','name']}
+                    additional_info = {k:v for k,v in request.args.items() if k not in ['key','canarytoken','name']}
                     canarydrop.add_additional_info_to_hit(hit_time=key,additional_info={request.args['name'][0]:additional_info})
                 return 'success'
             else:
@@ -188,13 +188,13 @@ class CanarytokenPage(resource.Resource, InputChannel):
     def format_additional_data(self, **kwargs):
         log.info(kwargs)
         additional_report = ''
-        if kwargs.has_key('src_ip') and kwargs['src_ip']:
+        if 'src_ip' in kwargs and kwargs['src_ip']:
             additional_report += 'Source IP: {ip}'.format(ip=kwargs['src_ip'])
-        if kwargs.has_key('useragent') and kwargs['useragent']:
+        if 'useragent' in kwargs and kwargs['useragent']:
             additional_report += '\nUser-agent: {useragent}'.format(useragent=kwargs['useragent'])
-        if kwargs.has_key('location') and kwargs['location']:
+        if 'location' in kwargs and kwargs['location']:
             additional_report += '\nCloned site is at: {location}'.format(location=kwargs['location'])
-        if kwargs.has_key('referer') and kwargs['referer']:
+        if 'referer' in kwargs and kwargs['referer']:
             additional_report += '\nReferring site: {referer}'.format(referer=kwargs['referer'])
         return additional_report
 

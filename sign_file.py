@@ -28,7 +28,7 @@ def authenticode_sign_binary(token, inputfile, outputfile):
         os.system('openssl ca -batch -config {tmpdir}/root-ca.conf -cert {tmpdir}/rootCA.crt -keyfile {tmpdir}/rootCA.key -in {tmpdir}/cert.csr -out {tmpdir}/cert.crt'.format(tmpdir=tmpdir,))
         os.system('osslsigncode sign -certs {tmpdir}/cert.crt -key {tmpdir}/cert.key -in {inputfile} -out {outputfile}'.format(tmpdir=tmpdir,inputfile=inputfile,outputfile=outputfile))
     except Exception as e:
-        print e
+        print(e)
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 
@@ -39,11 +39,11 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv,"ht:f:o:",["token=","inputfile=","outputfile="])
     except getopt.GetoptError:
-        print 'usage: sign_file.py -t <token> -f <inputfile> -o <outputfile>'
+        print('usage: sign_file.py -t <token> -f <inputfile> -o <outputfile>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'usage: sign_file.py -t <token> -f <inputfile> -o <outputfile>'
+            print('usage: sign_file.py -t <token> -f <inputfile> -o <outputfile>')
             sys.exit()
         elif opt in ("-t", "--token"):
             token = arg
@@ -53,15 +53,15 @@ def main(argv):
             outputfile = arg
 
     if not inputfile or not token or not outputfile:
-        print 'usage: sign_file.py -t <token> -f <inputfile> -o <outputfile>'
+        print('usage: sign_file.py -t <token> -f <inputfile> -o <outputfile>')
         sys.exit()
 
     if not os.path.isfile(inputfile):
-        print 'File does not exist'
+        print('File does not exist')
         sys.exit()
 
     if not any(x == os.path.splitext(inputfile)[1] for x in ['.dll','.exe']):
-        print 'File can only be dll or exe'
+        print('File can only be dll or exe')
         sys.exit()
 
     authenticode_sign_binary(token, inputfile, outputfile)

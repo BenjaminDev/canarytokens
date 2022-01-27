@@ -49,10 +49,10 @@ def lambda_handler(event, context):
 
             req = urllib.request.Request(url, data)
             response = urllib.request.urlopen(req)
-            print('AWS Access-key was used from IP {p}'.format(p=ip))
-            print('Looking up {u} to trigger alert!'.format(u=url))
-            print('Response Code: {r}'.format(r=response.getcode()))
-            print('Response Info: {r}'.format(r=response.info()))
+            print(('AWS Access-key was used from IP {p}'.format(p=ip)))
+            print(('Looking up {u} to trigger alert!'.format(u=url)))
+            print(('Response Code: {r}'.format(r=response.getcode())))
+            print(('Response Info: {r}'.format(r=response.info())))
 
             db_response = db.put_item(
                 TableName=DB_TABLE_NAME,
@@ -64,7 +64,7 @@ def lambda_handler(event, context):
                         'LastUsed': {'N': str(current_ts)}
                     }
             )
-            print('DynamoDB response: {r}'.format(r=db_response))
+            print(('DynamoDB response: {r}'.format(r=db_response)))
     return {'status':'ok'}
 
 MAX_LENGTH=253

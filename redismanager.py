@@ -6,7 +6,7 @@ db = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=se
 try:
     db.ping()
 except Exception as e:
-    print 'Could not connect to redis, bailing: {e}'.format(e=e)
+    print('Could not connect to redis, bailing: {e}'.format(e=e))
     import sys
     sys.exit(1)
 

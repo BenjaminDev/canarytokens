@@ -23,7 +23,7 @@ class User(object):
         self.alert_limit  = alert_limit
 
         self._user = {}
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if k not in self.allowed_attrs:
                 raise UnknownAttribute(attribute=k)
             self._user[k] = v

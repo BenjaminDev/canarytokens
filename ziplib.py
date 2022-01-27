@@ -5,7 +5,7 @@ from os import unlink, close
 from zipfile import ZipFile, ZipInfo
 
 def printzip(zip):
-    print '\t{extattr:b}\t{extattr:02x}\t{intattr:b}\t-\t{name}'.format(extattr=zip.external_attr,intattr=zip.internal_attr,name=zip.filename)
+    print('\t{extattr:b}\t{extattr:02x}\t{intattr:b}\t-\t{name}'.format(extattr=zip.external_attr,intattr=zip.internal_attr,name=zip.filename))
 
 MODE_READONLY  = 0x01
 MODE_HIDDEN    = 0x02
@@ -15,9 +15,9 @@ MODE_ARCHIVE   = 0x20
 MODE_FILE      = 0x80
 
 def make_canary_desktop_ini(hostname=None,dummyfile='resource.dll'):
-    return (u'\r\n[.ShellClassInfo]\r\nIconResource=\\\\%USERNAME%.%COMPUTERNAME%.%USERDOMAIN%.INI.'\
-           +unicode(hostname)\
-           +unicode('\\'+dummyfile+'\r\n')).encode('utf16')
+    return ('\r\n[.ShellClassInfo]\r\nIconResource=\\\\%USERNAME%.%COMPUTERNAME%.%USERDOMAIN%.INI.'\
+           +str(hostname)\
+           +str('\\'+dummyfile+'\r\n')).encode('utf16')
 
 def make_dir_entry(name=None, date_time=None, mode=MODE_DIRECTORY):
     tt = date_time.timetuple()

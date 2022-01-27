@@ -54,11 +54,11 @@ class ChannelBitcoin(InputChannel):
     def format_additional_data(self, **kwargs):
         log.info(kwargs)
         additional_report = ''
-        if kwargs.has_key('address') and kwargs['address']:
+        if 'address' in kwargs and kwargs['address']:
             additional_report += 'Bitcoin Address: {address}\r\n'.format(
                                                 address=kwargs['address'])
-        if kwargs.has_key('new_balance') and kwargs['new_balance'] and\
-           kwargs.has_key('old_balance') and kwargs['old_balance']:
+        if 'new_balance' in kwargs and kwargs['new_balance'] and\
+           'old_balance' in kwargs and kwargs['old_balance']:
             additional_report += 'Balance Changed: from {old_balance} to {new_balance}\r\n'.format(
                                                 old_balance=kwargs['old_balance'],
                                                 new_balance=kwargs['new_balance'],

@@ -58,10 +58,10 @@ class Canarytoken(object):
         return '<Canarytoken - %s>' % self._value
 
 if __name__ == '__main__':
-    print Canarytoken()
+    print((Canarytoken()))
     token = Canarytoken().value()
-    print token
-    print Canarytoken(value=token)
+    print(token)
+    print((Canarytoken(value=token)))
     
     bad_tokens = []
     #short value
@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
     for t in bad_tokens:
         try:
-            print Canarytoken(value=t)
+            print((Canarytoken(value=t)))
             assert False
         except NoCanarytokenFound:
-            print 'Invalid token %s detected' % t
+            print(('Invalid token %s detected' % t))

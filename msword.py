@@ -4,7 +4,7 @@ import datetime
 import random
 from zipfile import ZipFile, ZipInfo
 from ziplib import MODE_DIRECTORY
-from cStringIO import StringIO
+from io import StringIO
 
 import settings
 

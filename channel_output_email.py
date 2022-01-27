@@ -110,7 +110,7 @@ class EmailOutputChannel(OutputChannel):
             self.data['tokentype']   = canarydrop._drop['type']
 
         self.data['canarytoken'] = canarydrop['canarytoken']
-        self.data['description'] = unicode(canarydrop['memo'], "utf8") if canarydrop['memo'] is not None else ''
+        self.data['description'] = str(canarydrop['memo'], "utf8") if canarydrop['memo'] is not None else ''
         if settings.MAILGUN_DOMAIN_NAME and settings.MAILGUN_API_KEY:
             self.mailgun_send(msg=msg,canarydrop=canarydrop)
         elif settings.MANDRILL_API_KEY:
@@ -178,7 +178,7 @@ class EmailOutputChannel(OutputChannel):
                         .format(recipient=canarydrop['alert_email_recipient'],
                                 token=canarydrop.canarytoken.value()))
 
-        except mandrill.Error, e:
+        except mandrill.Error as e:
             # Mandrill errors are thrown as exceptions
             log.error('A mandrill error occurred: %s - %s' % (e.__class__, e))
             # A mandrill error occurred: <class 'mandrill.UnknownSubaccountError'> - No subaccount exists with the id 'customer-123'....

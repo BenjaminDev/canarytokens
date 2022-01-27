@@ -77,10 +77,10 @@ class CanaryMySQLFactory(Factory, InputChannel):
 
     def format_additional_data(self, **kwargs):
         additional_report = ''
-        if kwargs.has_key('Hostname') and kwargs['Hostname']:
+        if 'Hostname' in kwargs and kwargs['Hostname']:
             additional_report += 'Hostname: {hostname}\r\n'.format(
                                                 hostname=kwargs['Hostname'])
-        if kwargs.has_key('Locale') and kwargs['Locale']:
+        if 'Locale' in kwargs and kwargs['Locale']:
             additional_report += 'Locale: {locale}\r\n'.format(
                                                 locale=kwargs['Locale'])
         return additional_report

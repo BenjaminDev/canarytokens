@@ -1,7 +1,7 @@
 import requests
 import datetime
 import simplejson
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import base64
 import settings
 from exception import LinkedInFailure
@@ -22,7 +22,7 @@ from twisted.web.client import getPage
 
 def get_canarydrop(canarytoken=None):
     canarydrop = db.hgetall(KEY_CANARYDROP+canarytoken)
-    if 'triggered_list' in canarydrop.keys():
+    if 'triggered_list' in list(canarydrop.keys()):
         canarydrop['triggered_list'] = simplejson.loads(canarydrop['triggered_list'])
     return canarydrop
 
@@ -135,7 +135,7 @@ def get_canarydrop_triggered_list(canarytoken):
     else:
         triggered_list = simplejson.loads(triggered_list)
         #we limit to last N hits, configurable via CANARY_MAX_HISTORY envvar
-        triggered_list = {k:v for k,v in triggered_list.iteritems()
+        triggered_list = {k:v for k,v in triggered_list.items()
                           if k in sorted(triggered_list.keys())[-settings.MAX_HISTORY:]}
     return triggered_list
 
@@ -168,8 +168,8 @@ def add_additional_info_to_hit(canarytoken,hit_time,additional_info=None):
 
         if 'additional_info' not in triggered_list[hit_time]:
             triggered_list[hit_time]['additional_info'] = {}
-        for k,v in additional_info.iteritems():
-            if k in triggered_list[hit_time]['additional_info'].keys():
+        for k,v in additional_info.items():
+            if k in list(triggered_list[hit_time]['additional_info'].keys()):
                 triggered_list[hit_time]['additional_info'][k].update(v)
             else:
                 triggered_list[hit_time]['additional_info'][k] = v
@@ -211,7 +211,7 @@ def get_aws_keys(token=None, server=None):
 
 def validate_hostname(hostname):
     import re
-    print 'Going to search {e} for bad username characters'.format(e=hostname)
+    print('Going to search {e} for bad username characters'.format(e=hostname))
     pattern = re.compile("[^a-zA-Z0-9+=,.@_-]")
     match = pattern.search(hostname)
     if match:

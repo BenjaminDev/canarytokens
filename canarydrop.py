@@ -36,7 +36,7 @@ class Canarydrop(object):
 
     def __init__(self, generate=False, **kwargs):
         self._drop = {}
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if k not in self.allowed_attrs:
                 raise UnknownAttribute(attribute=k)
             self._drop[k] = v
@@ -103,7 +103,7 @@ class Canarydrop(object):
         add_additional_info_to_hit(self.canarytoken, hit_time, additional_info)
 
     def add_canarydrop_hit(self, input_channel="http", **kwargs):
-        if 'hit_time' in self._drop.keys():
+        if 'hit_time' in list(self._drop.keys()):
             hit_time = self._drop['hit_time']
         else:
             hit_time = None
@@ -263,7 +263,7 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
         if serialized['user']:
             serialized['user'] = serialized['user'].username
 
-        if 'triggered_list' in serialized.keys():
+        if 'triggered_list' in list(serialized.keys()):
             serialized['triggered_list'] = simplejson.dumps(serialized['triggered_list'])
 
         return serialized

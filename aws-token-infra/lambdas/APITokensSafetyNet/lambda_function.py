@@ -2,7 +2,7 @@ import json
 import boto3
 import csv
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from datetime import datetime, timezone, timedelta
 from io import StringIO
@@ -60,9 +60,9 @@ def lambda_handler(event, context):
 
                 req = urllib.request.Request(url, data)
                 response = urllib.request.urlopen(req)
-                print('Looking up {u} to trigger alert!'.format(u=url))
-                print('Response Code: {r}'.format(r=response.getcode()))
-                print('Response Info: {r}'.format(r=response.info()))
+                print(('Looking up {u} to trigger alert!'.format(u=url)))
+                print(('Response Code: {r}'.format(r=response.getcode())))
+                print(('Response Info: {r}'.format(r=response.info())))
 
 
                 db_response = db.put_item(
@@ -77,7 +77,7 @@ def lambda_handler(event, context):
                 )
                 # print('DynamoDB response: {r}'.format(r=db_response))
         except ValueError as e:
-            print('ValueError: {}'.format(e))
+            print(('ValueError: {}'.format(e)))
             continue
 
     return {

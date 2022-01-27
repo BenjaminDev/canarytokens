@@ -2,7 +2,7 @@ from zope.interface import implementer, implements
 from twisted.logger import ILogObserver
 from twisted.logger import LogLevel
 import json
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from twisted.logger import Logger
 log = Logger()
@@ -93,7 +93,7 @@ def httpRequest(postdata):
     d.addCallback(handle_response)
     return d
 
-def webhookLogObserver(recordSeparator=u"\x1e"):
+def webhookLogObserver(recordSeparator="\x1e"):
     """
     Create a L{errorsToWebhookLogObserver} that emits error and critical
     loglines' text to a specified webhook URL by doing a HTTP POST.
@@ -106,5 +106,5 @@ def webhookLogObserver(recordSeparator=u"\x1e"):
 
     """
     return errorsToWebhookLogObserver(
-        lambda event: u"{0}{1}\n".format(recordSeparator, eventAsJSON(event))
+        lambda event: "{0}{1}\n".format(recordSeparator, eventAsJSON(event))
     )

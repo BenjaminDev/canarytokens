@@ -1,5 +1,5 @@
 import zlib
-from cStringIO import StringIO
+from io import StringIO
 import re
 import sys
 import random
