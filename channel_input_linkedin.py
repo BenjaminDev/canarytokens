@@ -1,6 +1,5 @@
 import simplejson
 import twill
-
 from twisted.application.internet import TimerService
 from twisted.logger import Logger
 
@@ -8,18 +7,12 @@ log = Logger()
 
 from canarydrop import Canarydrop
 from channel import InputChannel
-from queries import (
-    get_canarydrop,
-    get_all_imgur_tokens,
-    save_imgur_token,
-    get_imgur_count,
-    get_all_linkedin_accounts,
-    save_linkedin_account,
-    get_linkedin_viewer_count,
-)
-from exception import LinkedInFailure
 from constants import INPUT_CHANNEL_LINKEDIN
-
+from exception import LinkedInFailure
+from queries import (get_all_imgur_tokens, get_all_linkedin_accounts,
+                     get_canarydrop, get_imgur_count,
+                     get_linkedin_viewer_count, save_imgur_token,
+                     save_linkedin_account)
 
 # create_linkedin_account(username='blah@blah.com', password='mooo')
 # ht = get_canarydrop(canarytoken=get_linkedin_account(username='blah@blah.com')['canarytoken'])

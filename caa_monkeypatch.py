@@ -29,8 +29,8 @@ def patchCommonModule():
 
 def patchResolveModule():
     import twisted.names.resolve
-    from twisted.names import error
     from twisted.internet import defer
+    from twisted.names import error
 
     def lookupCAA(self, name, timeout=None):
         if not self.resolvers:

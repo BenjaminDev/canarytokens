@@ -1,5 +1,6 @@
-import re
 import random
+import re
+
 from exception import NoCanarytokenFound
 
 canarytoken_ALPHABET = [

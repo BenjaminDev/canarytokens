@@ -1,22 +1,23 @@
-from twisted.internet import reactor, defer
+from twisted.internet import defer, reactor
 from twisted.internet.task import deferLater
-from twisted.names import dns, server, error
 from twisted.logger import Logger
+from twisted.names import dns, error, server
 
 log = Logger()
 
-from constants import INPUT_CHANNEL_DNS
-from tokens import Canarytoken
-from canarydrop import Canarydrop
-from exception import NoCanarytokenPresent, NoCanarytokenFound
-from channel import InputChannel
-from queries import get_canarydrop, get_all_canary_domains
+import base64
+import math
+import re
+
+from exceptions import UnicodeDecodeError
 
 import settings
-import math
-import base64
-import re
-from exceptions import UnicodeDecodeError
+from canarydrop import Canarydrop
+from channel import InputChannel
+from constants import INPUT_CHANNEL_DNS
+from exception import NoCanarytokenFound, NoCanarytokenPresent
+from queries import get_all_canary_domains, get_canarydrop
+from tokens import Canarytoken
 
 
 class DNSServerFactory(server.DNSServerFactory, object):

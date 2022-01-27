@@ -1,40 +1,28 @@
-import requests
-import datetime
-import simplejson
-import urllib.request, urllib.parse, urllib.error
 import base64
+import datetime
+import urllib.error
+import urllib.parse
+import urllib.request
+
+import requests
+import simplejson
+from twisted.logger import Logger
+
 import settings
 from exception import LinkedInFailure
-from redismanager import (
-    db,
-    KEY_CANARYDROP,
-    KEY_CANARY_DOMAINS,
-    KEY_CANARY_PATH_ELEMENTS,
-    KEY_CANARY_PAGES,
-    KEY_CANARYDROPS_TIMELINE,
-    KEY_USER_ACCOUNT,
-    KEY_CANARYTOKEN_ALERT_COUNT,
-    KEY_IMGUR_TOKEN,
-    KEY_IMGUR_TOKENS,
-    KEY_LINKEDIN_ACCOUNT,
-    KEY_LINKEDIN_ACCOUNTS,
-    KEY_BITCOIN_ACCOUNTS,
-    KEY_BITCOIN_ACCOUNT,
-    KEY_CANARY_NXDOMAINS,
-    KEY_CLONEDSITE_TOKEN,
-    KEY_CLONEDSITE_TOKENS,
-    KEY_CANARY_IP_CACHE,
-    KEY_CANARY_GOOGLE_API_KEY,
-    KEY_TOR_EXIT_NODES,
-    KEY_WEBHOOK_IDX,
-    KEY_EMAIL_IDX,
-    KEY_WIREGUARD_KEYMAP,
-    KEY_KUBECONFIG_SERVEREP,
-    KEY_KUBECONFIG_CERTS,
-    KEY_KUBECONFIG_HITS,
-)
-
-from twisted.logger import Logger
+from redismanager import (KEY_BITCOIN_ACCOUNT, KEY_BITCOIN_ACCOUNTS,
+                          KEY_CANARY_DOMAINS, KEY_CANARY_GOOGLE_API_KEY,
+                          KEY_CANARY_IP_CACHE, KEY_CANARY_NXDOMAINS,
+                          KEY_CANARY_PAGES, KEY_CANARY_PATH_ELEMENTS,
+                          KEY_CANARYDROP, KEY_CANARYDROPS_TIMELINE,
+                          KEY_CANARYTOKEN_ALERT_COUNT, KEY_CLONEDSITE_TOKEN,
+                          KEY_CLONEDSITE_TOKENS, KEY_EMAIL_IDX,
+                          KEY_IMGUR_TOKEN, KEY_IMGUR_TOKENS,
+                          KEY_KUBECONFIG_CERTS, KEY_KUBECONFIG_HITS,
+                          KEY_KUBECONFIG_SERVEREP, KEY_LINKEDIN_ACCOUNT,
+                          KEY_LINKEDIN_ACCOUNTS, KEY_TOR_EXIT_NODES,
+                          KEY_USER_ACCOUNT, KEY_WEBHOOK_IDX,
+                          KEY_WIREGUARD_KEYMAP, db)
 
 log = Logger()
 from twisted.web.client import getPage
@@ -436,7 +424,7 @@ def get_all_imgur_tokens():
 
 def get_linkedin_viewer_count(username=None, password=None):
     from twill import get_browser
-    from twill.commands import add_extra_header, go, fv, submit, reset_browser
+    from twill.commands import add_extra_header, fv, go, reset_browser, submit
 
     reset_browser()
     from twill.errors import TwillException
@@ -516,8 +504,8 @@ def create_linkedin_account(username=None, password=None, canarydrop=None):
         raise KeyError
 
     if not canarydrop:
-        from tokens import Canarytoken
         from canarydrop import Canarydrop
+        from tokens import Canarytoken
 
         ht = Canarytoken()
         canarydrop = Canarydrop(canarytoken=ht.value())
@@ -587,8 +575,8 @@ def create_bitcoin_account(address=None, canarydrop=None):
         raise KeyError
 
     if not canarydrop:
-        from tokens import Canarytoken
         from canarydrop import Canarydrop
+        from tokens import Canarytoken
 
         ht = Canarytoken()
         canarydrop = Canarydrop(canarytoken=ht.value())

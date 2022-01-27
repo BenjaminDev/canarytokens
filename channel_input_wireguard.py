@@ -1,9 +1,10 @@
 from twisted.application import internet
-from constants import INPUT_CHANNEL_WIREGUARD
-from channel import InputChannel
+
+import queries
 import wireguard as wg
 from canarydrop import Canarydrop
-import queries
+from channel import InputChannel
+from constants import INPUT_CHANNEL_WIREGUARD
 
 
 class ChannelWireGuard(InputChannel):

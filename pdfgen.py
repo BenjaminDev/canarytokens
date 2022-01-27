@@ -1,8 +1,8 @@
-import zlib
-from io import StringIO
+import random
 import re
 import sys
-import random
+import zlib
+from io import StringIO
 
 import settings
 

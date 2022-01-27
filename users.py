@@ -2,9 +2,10 @@
 Class that encapsulates a user identity. Unused for now.
 """
 
-from exception import UnknownAttribute, MissingAttribute
-from queries import lookup_canarytoken_alert_count, save_canarytoken_alert_count
 import settings
+from exception import MissingAttribute, UnknownAttribute
+from queries import (lookup_canarytoken_alert_count,
+                     save_canarytoken_alert_count)
 
 
 class User(object):

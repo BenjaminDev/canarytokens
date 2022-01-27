@@ -1,23 +1,20 @@
 import re
 
+from twisted.cred.portal import IRealm, Portal
+from twisted.internet import defer
+from twisted.logger import Logger
+from twisted.mail import smtp
 from zope.interface import implements
 
-from twisted.internet import defer
-from twisted.mail import smtp
-from twisted.cred.portal import IRealm
-from twisted.cred.portal import Portal
-from twisted.logger import Logger
-
 log = Logger()
-from twisted.application import internet
-from twisted.application import service
+from twisted.application import internet, service
 
-from constants import INPUT_CHANNEL_SMTP
-from tokens import Canarytoken
 from canarydrop import Canarydrop
-from exception import NoCanarytokenPresent, NoCanarytokenFound
 from channel import InputChannel
+from constants import INPUT_CHANNEL_SMTP
+from exception import NoCanarytokenFound, NoCanarytokenPresent
 from queries import get_canarydrop
+from tokens import Canarytoken
 
 
 class CanaryMessageDelivery:

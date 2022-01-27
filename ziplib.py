@@ -1,7 +1,7 @@
+import datetime
 import sys
 import tempfile
-import datetime
-from os import unlink, close
+from os import close, unlink
 from zipfile import ZipFile, ZipInfo
 
 

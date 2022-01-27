@@ -1,21 +1,25 @@
 """
 Output channel that sends emails. Relies on Mandrill, Sendgrid or SMTP to actually send mails.
 """
-import settings
 import pprint
+
 from twisted.logger import Logger
 
+import settings
+
 log = Logger()
+import smtplib
+from email.MIMEText import MIMEText
+
 import mandrill
 import requests
+import sendgrid
 from htmlmin import minify
-from httpd_site import env
+from sendgrid.helpers.mail import *
+
 from channel import OutputChannel
 from constants import OUTPUT_CHANNEL_EMAIL
-import sendgrid
-from sendgrid.helpers.mail import *
-from email.MIMEText import MIMEText
-import smtplib
+from httpd_site import env
 
 try:
     # Python 3

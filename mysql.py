@@ -1,15 +1,14 @@
-import tempfile
-import shutil
-import datetime
-import random
 import base64
+import datetime
 import gzip
-from zipfile import ZipFile, ZipInfo
-from ziplib import MODE_DIRECTORY
-from io import StringIO
 import random
+import shutil
+import tempfile
+from io import StringIO
+from zipfile import ZipFile, ZipInfo
 
 from settings import CANARY_MYSQL_DUMP_TEMPLATE
+from ziplib import MODE_DIRECTORY
 
 MYSQL_DUMP = CANARY_MYSQL_DUMP_TEMPLATE
 

@@ -5,10 +5,10 @@ Base class for all canarydrop channels.
 import datetime
 
 import simplejson
+from twisted.logger import Logger
 
 import settings
 from exception import DuplicateChannel
-from twisted.logger import Logger
 
 log = Logger()
 

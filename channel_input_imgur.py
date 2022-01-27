@@ -1,8 +1,7 @@
 import simplejson
-
 from twisted.application.internet import TimerService
-from twisted.internet.task import deferLater
 from twisted.internet import reactor
+from twisted.internet.task import deferLater
 from twisted.logger import Logger
 
 log = Logger()
@@ -10,13 +9,9 @@ from twisted.web.client import getPage
 
 from canarydrop import Canarydrop
 from channel import InputChannel
-from queries import (
-    get_canarydrop,
-    get_all_imgur_tokens,
-    save_imgur_token,
-    get_imgur_count,
-)
 from constants import INPUT_CHANNEL_IMGUR
+from queries import (get_all_imgur_tokens, get_canarydrop, get_imgur_count,
+                     save_imgur_token)
 
 
 class ChannelImgur(InputChannel):

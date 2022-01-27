@@ -1,26 +1,29 @@
-import simplejson
-import datetime
-import os
-import hashlib
 import cgi
+import datetime
+import hashlib
+import os
 
-from twisted.web import server, resource
+import simplejson
 from twisted.application import internet
-from twisted.web.server import Site, GzipEncoderFactory
-from twisted.web.resource import Resource, EncodingResourceWrapper, ForbiddenResource
-from twisted.web.util import Redirect, redirectTo
 from twisted.logger import Logger
+from twisted.web import resource, server
+from twisted.web.resource import (EncodingResourceWrapper, ForbiddenResource,
+                                  Resource)
+from twisted.web.server import GzipEncoderFactory, Site
+from twisted.web.util import Redirect, redirectTo
 
 log = Logger()
-from jinja2 import Environment, FileSystemLoader
 import subprocess
 
-from tokens import Canarytoken
+from jinja2 import Environment, FileSystemLoader
+
 from canarydrop import Canarydrop
 from channel import InputChannel
-from queries import get_canarydrop, add_canarydrop_hit, add_additional_info_to_hit
 from constants import INPUT_CHANNEL_HTTP
-from settings import TOKEN_RETURN, MAX_UPLOAD_SIZE, WEB_IMAGE_UPLOAD_PATH
+from queries import (add_additional_info_to_hit, add_canarydrop_hit,
+                     get_canarydrop)
+from settings import MAX_UPLOAD_SIZE, TOKEN_RETURN, WEB_IMAGE_UPLOAD_PATH
+from tokens import Canarytoken
 
 env = Environment(loader=FileSystemLoader("templates"))
 

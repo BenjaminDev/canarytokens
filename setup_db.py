@@ -1,6 +1,5 @@
-from queries import *
 import settings
-
+from queries import *
 
 domains = settings.DOMAINS
 nxdomains = settings.NXDOMAINS

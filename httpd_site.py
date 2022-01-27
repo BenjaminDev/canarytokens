@@ -1,62 +1,46 @@
 import base64
-import simplejson
 import cgi
 
-from twisted.web import server, resource
-from twisted.application import internet
-from twisted.web.server import Site, GzipEncoderFactory
+import simplejson
 import twisted.web.resource
-from twisted.web.resource import (
-    Resource,
-    EncodingResourceWrapper,
-    ForbiddenResource,
-    NoResource,
-)
-
-from twisted.web.static import File, DirectoryLister, Data
-
-from twisted.web.util import Redirect
+from twisted.application import internet
 from twisted.logger import Logger
+from twisted.web import resource, server
+from twisted.web.resource import (EncodingResourceWrapper, ForbiddenResource,
+                                  NoResource, Resource)
+from twisted.web.server import GzipEncoderFactory, Site
+from twisted.web.static import Data, DirectoryLister, File
+from twisted.web.util import Redirect
 
 log = Logger()
-from jinja2 import Environment, FileSystemLoader
-import pyqrcode
-
-
-from tokens import Canarytoken
-from canarydrop import Canarydrop
-from queries import (
-    save_canarydrop,
-    save_imgur_token,
-    get_canarydrop,
-    create_linkedin_account,
-    create_bitcoin_account,
-    get_linkedin_account,
-    get_bitcoin_account,
-    save_clonedsite_token,
-    get_all_canary_sites,
-    get_canary_google_api_key,
-    is_webhook_valid,
-    get_aws_keys,
-    get_all_canary_domains,
-)
-
-from exception import NoCanarytokenPresent
-from ziplib import make_canary_zip
-from msword import make_canary_msword
-from pdfgen import make_canary_pdf
-from msexcel import make_canary_msexcel
-from kubeconfig import get_kubeconfig
-from mysql import make_canary_mysql_dump
-from authenticode import make_canary_authenticode_binary
-import settings
+import csv
 import datetime
-import tempfile
 import hashlib
 import os
+import tempfile
 from io import StringIO
-import csv
+
+import pyqrcode
+from jinja2 import Environment, FileSystemLoader
+
+import settings
 import wireguard as wg
+from authenticode import make_canary_authenticode_binary
+from canarydrop import Canarydrop
+from exception import NoCanarytokenPresent
+from kubeconfig import get_kubeconfig
+from msexcel import make_canary_msexcel
+from msword import make_canary_msword
+from mysql import make_canary_mysql_dump
+from pdfgen import make_canary_pdf
+from queries import (create_bitcoin_account, create_linkedin_account,
+                     get_all_canary_domains, get_all_canary_sites,
+                     get_aws_keys, get_bitcoin_account,
+                     get_canary_google_api_key, get_canarydrop,
+                     get_linkedin_account, is_webhook_valid, save_canarydrop,
+                     save_clonedsite_token, save_imgur_token)
+from tokens import Canarytoken
+from ziplib import make_canary_zip
 
 env = Environment(
     loader=FileSystemLoader("templates"), extensions=["jinja2.ext.loopcontrols"]

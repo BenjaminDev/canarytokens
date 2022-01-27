@@ -1,12 +1,14 @@
-import os
+import base64
+import datetime
 import gzip
 import json
+import os
+import random
 import re
 import time
-import urllib.request, urllib.error, urllib.parse
-import base64
-import random
-import datetime
+import urllib.error
+import urllib.parse
+import urllib.request
 from io import BytesIO
 
 import boto3

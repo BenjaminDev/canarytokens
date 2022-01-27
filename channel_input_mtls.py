@@ -1,44 +1,28 @@
-from OpenSSL.crypto import (
-    FILETYPE_PEM,
-    PKey,
-    TYPE_RSA,
-    X509,
-    X509Extension,
-    dump_certificate,
-    dump_privatekey,
-    load_certificate,
-    load_privatekey,
-)
-from twisted.internet.ssl import PrivateCertificate, Certificate
-from twisted.internet import reactor, defer
+import base64
+import json
+import random
+from math import ceil
+from time import time
+
+from OpenSSL.crypto import (FILETYPE_PEM, TYPE_RSA, X509, PKey, X509Extension,
+                            dump_certificate, dump_privatekey,
+                            load_certificate, load_privatekey)
+from twisted.application.internet import SSLServer
+from twisted.internet import defer, reactor
+from twisted.internet.error import CertificateError
 from twisted.internet.protocol import Factory
+from twisted.internet.ssl import Certificate, PrivateCertificate
 from twisted.logger import Logger
 from twisted.protocols import basic
-from twisted.internet.error import CertificateError
-from twisted.application.internet import SSLServer
 
-from time import time
-from math import ceil
-
+from canarydrop import Canarydrop
 from channel import InputChannel
 from constants import INPUT_CHANNEL_MTLS
-
-import json
-import base64
-import random
-
+from exception import NoCanarytokenFound, NoCanarytokenPresent
+from queries import (get_canarydrop, get_certificate, get_kc_hits,
+                     save_certificate, save_kc_endpoint,
+                     save_kc_hit_for_aggregation)
 from tokens import Canarytoken
-from canarydrop import Canarydrop
-from exception import NoCanarytokenPresent, NoCanarytokenFound
-from channel import InputChannel
-from queries import (
-    get_canarydrop,
-    get_certificate,
-    save_certificate,
-    save_kc_endpoint,
-    get_kc_hits,
-    save_kc_hit_for_aggregation,
-)
 
 log = Logger()
 

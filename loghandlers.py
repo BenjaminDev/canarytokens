@@ -1,24 +1,20 @@
-from zope.interface import implementer, implements
-from twisted.logger import ILogObserver
-from twisted.logger import LogLevel
 import json
-import urllib.request, urllib.parse, urllib.error
+import urllib.error
+import urllib.parse
+import urllib.request
 
-from twisted.logger import Logger
+from twisted.logger import ILogObserver, Logger, LogLevel
+from zope.interface import implementer, implements
 
 log = Logger()
-import settings
-
-from twisted.web.iweb import IBodyProducer
-from twisted.internet import defer
+from twisted.internet import defer, protocol, reactor
+from twisted.internet.defer import succeed
 from twisted.web.client import Agent
 from twisted.web.http_headers import Headers
-from twisted.internet import reactor
-from twisted.internet import protocol
+from twisted.web.iweb import IBodyProducer
 from zope.interface import implementer
 
-from twisted.internet.defer import succeed
-from twisted.web.iweb import IBodyProducer
+import settings
 
 # The below value comes up whenever a mailgun API requested is attempted
 # And the intended recipient of the mail is an incorrectly entered/obviously wrong

@@ -1,15 +1,15 @@
-from twisted.logger import Logger
-from twisted.internet.protocol import Protocol, Factory
-from twisted.application import internet
-
-from channel import InputChannel
-from tokens import Canarytoken
-from canarydrop import Canarydrop
-from queries import get_canarydrop
-from exception import NoCanarytokenFound
-from constants import INPUT_CHANNEL_MYSQL
-
 import struct
+
+from twisted.application import internet
+from twisted.internet.protocol import Factory, Protocol
+from twisted.logger import Logger
+
+from canarydrop import Canarydrop
+from channel import InputChannel
+from constants import INPUT_CHANNEL_MYSQL
+from exception import NoCanarytokenFound
+from queries import get_canarydrop
+from tokens import Canarytoken
 
 log = Logger()
 

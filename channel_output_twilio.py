@@ -1,17 +1,18 @@
 """
 Output channel that sends SMSs. Relies on Twilio to actually send SMSs.
 """
-import settings
 import pprint
 
 from twisted.logger import Logger
 
+import settings
+
 log = Logger()
 from twilio.rest import TwilioRestClient
 
+import settings
 from channel import OutputChannel
 from constants import OUTPUT_CHANNEL_TWILIO_SMS
-import settings
 
 
 class TwilioOutputChannel(OutputChannel):

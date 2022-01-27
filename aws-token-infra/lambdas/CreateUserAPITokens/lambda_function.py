@@ -1,9 +1,12 @@
-import boto3
-import json, urllib.request, urllib.parse
-import random, string
 import datetime
+import json
 import os
+import random
+import string
+import urllib.parse
+import urllib.request
 
+import boto3
 
 iam = boto3.client("iam")
 db = boto3.client("dynamodb")

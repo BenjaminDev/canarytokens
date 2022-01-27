@@ -1,12 +1,12 @@
-import tempfile
-import shutil
 import datetime
 import random
-from zipfile import ZipFile, ZipInfo
-from ziplib import MODE_DIRECTORY
+import shutil
+import tempfile
 from io import StringIO
+from zipfile import ZipFile, ZipInfo
 
 import settings
+from ziplib import MODE_DIRECTORY
 
 WORD_TEMPLATE = settings.CANARY_WORD_TEMPLATE
 

@@ -1,6 +1,5 @@
 import simplejson
 import twill
-
 from twisted.application.internet import TimerService
 from twisted.logger import Logger
 
@@ -8,14 +7,10 @@ log = Logger()
 
 from canarydrop import Canarydrop
 from channel import InputChannel
-from queries import (
-    get_canarydrop,
-    get_all_bitcoin_accounts,
-    save_bitcoin_account,
-    get_bitcoin_address_balance,
-)
-from exception import BitcoinFailure
 from constants import INPUT_CHANNEL_BITCOIN
+from exception import BitcoinFailure
+from queries import (get_all_bitcoin_accounts, get_bitcoin_address_balance,
+                     get_canarydrop, save_bitcoin_account)
 
 
 class ChannelBitcoin(InputChannel):

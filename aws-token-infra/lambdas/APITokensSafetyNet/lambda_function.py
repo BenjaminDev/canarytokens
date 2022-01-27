@@ -1,12 +1,14 @@
-import json
-import boto3
 import csv
+import json
 import time
-import urllib.request, urllib.parse, urllib.error
-
-from datetime import datetime, timezone, timedelta
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timedelta, timezone
 from io import StringIO
-from urllib import request, parse
+from urllib import parse, request
+
+import boto3
 
 ALERT_THRESHOLD = timedelta(hours=4, minutes=30)
 DB_TABLE_NAME = "awsidtoken_table"

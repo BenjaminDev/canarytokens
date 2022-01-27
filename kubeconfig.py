@@ -1,13 +1,14 @@
-from channel_input_mtls import mTLS
-from queries import get_certificate, get_kc_endpoint
+import base64
+import copy
+import random
 from collections import OrderedDict
+
+import yaml
 from twisted.logger import Logger
 
-import copy
-import yaml
-import random
-import base64
 import settings
+from channel_input_mtls import mTLS
+from queries import get_certificate, get_kc_endpoint
 
 UnauthorizedResponseBody = {"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"Unauthorized","reason":"Unauthorized","code":401}
 BadRequestResponseBody = {"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"Bad Request","reason":"Bad Request","code":400}

@@ -5,34 +5,26 @@ and records accounting information about the Canarytoken.
 Maps to the object stored in Redis.
 """
 
-import datetime
-import random
-import md5
-import os
 import base64
+import datetime
+import os
+import random
+from hashlib import md5
+
 import pyqrcode
 import simplejson
 
-from constants import (
-    OUTPUT_CHANNEL_EMAIL,
-    OUTPUT_CHANNEL_TWILIO_SMS,
-    OUTPUT_CHANNEL_WEBHOOK,
-)
-from queries import (
-    get_all_canary_sites,
-    get_all_canary_path_elements,
-    get_all_canary_pages,
-    get_all_canary_domains,
-    get_all_canary_nxdomains,
-    load_user,
-    add_canarydrop_hit,
-    add_additional_info_to_hit,
-    get_canarydrop_triggered_list,
-)
-from tokens import Canarytoken
-from users import User, AnonymousUser
-from exception import NoUser, NoCanarytokenPresent, UnknownAttribute
 import wireguard as wg
+from constants import (OUTPUT_CHANNEL_EMAIL, OUTPUT_CHANNEL_TWILIO_SMS,
+                       OUTPUT_CHANNEL_WEBHOOK)
+from exception import NoCanarytokenPresent, NoUser, UnknownAttribute
+from queries import (add_additional_info_to_hit, add_canarydrop_hit,
+                     get_all_canary_domains, get_all_canary_nxdomains,
+                     get_all_canary_pages, get_all_canary_path_elements,
+                     get_all_canary_sites, get_canarydrop_triggered_list,
+                     load_user)
+from tokens import Canarytoken
+from users import AnonymousUser, User
 
 
 class Canarydrop(object):

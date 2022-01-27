@@ -1,8 +1,8 @@
-import sys
 import getopt
 import os
-import tempfile
 import shutil
+import sys
+import tempfile
 
 
 def authenticode_sign_binary(token, inputfile, outputfile):

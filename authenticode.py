@@ -1,7 +1,7 @@
-from sign_file import authenticode_sign_binary
-
 import tempfile
 from os import unlink
+
+from sign_file import authenticode_sign_binary
 
 
 def make_canary_authenticode_binary(hostname=None, filebody=[]):

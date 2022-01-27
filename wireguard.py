@@ -1,20 +1,21 @@
+import base64
+import collections
+import hmac
+import random
+import struct
 import textwrap
-from twisted.internet.protocol import DatagramProtocol
-import nacl.public
+import time
+from enum import Enum
+
 import nacl.bindings
+import nacl.public
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from pyblake2 import blake2s
-import hmac
-from enum import Enum
-import collections
-import struct
-import base64
-import queries
-import random
-import settings
-import time
-
+from twisted.internet.protocol import DatagramProtocol
 from twisted.logger import Logger
+
+import queries
+import settings
 
 log = Logger()
 
