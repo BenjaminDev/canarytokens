@@ -6,21 +6,22 @@ from exception import UnknownAttribute, MissingAttribute
 from queries import lookup_canarytoken_alert_count, save_canarytoken_alert_count
 import settings
 
+
 class User(object):
-    allowed_attrs = ['username', 'alert_count']
+    allowed_attrs = ["username", "alert_count"]
 
     def __init__(self, alert_expiry=1, alert_limit=100, **kwargs):
         """Return a new UserPolicy object.
 
-           Arguments:
+        Arguments:
 
-           alert_expiry -- The delay after a successful alert after which
-                           the limit no longer applies.
-           alert_limit  -- The number of alerts allowed.
+        alert_expiry -- The delay after a successful alert after which
+                        the limit no longer applies.
+        alert_limit  -- The number of alerts allowed.
         """
 
         self.alert_expiry = alert_expiry
-        self.alert_limit  = alert_limit
+        self.alert_limit = alert_limit
 
         self._user = {}
         for k, v in kwargs.items():
@@ -28,16 +29,17 @@ class User(object):
                 raise UnknownAttribute(attribute=k)
             self._user[k] = v
 
-        if 'username' not in self._user:
+        if "username" not in self._user:
             raise MissingAttribute(attribute=username)
 
-    def is_anonymous(self,):
-        return self._user['username'] == 'Anonymous'
+    def is_anonymous(
+        self,
+    ):
+        return self._user["username"] == "Anonymous"
 
     def can_send_alert(self, canarydrop=None):
         try:
-            alert_count = int(lookup_canarytoken_alert_count(
-                                    canarydrop.canarytoken))
+            alert_count = int(lookup_canarytoken_alert_count(canarydrop.canarytoken))
         except TypeError:
             return True
 
@@ -48,22 +50,35 @@ class User(object):
 
     def do_accounting(self, canarydrop=None):
         try:
-            alert_count = int(lookup_canarytoken_alert_count(
-                                    canarydrop.canarytoken))+1
+            alert_count = (
+                int(lookup_canarytoken_alert_count(canarydrop.canarytoken)) + 1
+            )
         except TypeError:
             alert_count = 1
 
-        save_canarytoken_alert_count(canarydrop.canarytoken, alert_count,
-                                    self.alert_expiry)
+        save_canarytoken_alert_count(
+            canarydrop.canarytoken, alert_count, self.alert_expiry
+        )
 
     @property
-    def username(self,):
-        return self._user['username']
+    def username(
+        self,
+    ):
+        return self._user["username"]
+
 
 class AnonymousUser(User):
     """Represents an anonymous user. These users have lower limits than
-       regular users, unless configured otherwise"""
+    regular users, unless configured otherwise"""
+
     def __init__(self):
-        User.__init__(self, username='Anonymous',
-                      alert_expiry=(5 if settings.DEBUG else 60),
-                      alert_limit=(int(settings.MAX_ALERTS_PER_MINUTE) if settings.MAX_ALERTS_PER_MINUTE else 1))
+        User.__init__(
+            self,
+            username="Anonymous",
+            alert_expiry=(5 if settings.DEBUG else 60),
+            alert_limit=(
+                int(settings.MAX_ALERTS_PER_MINUTE)
+                if settings.MAX_ALERTS_PER_MINUTE
+                else 1
+            ),
+        )

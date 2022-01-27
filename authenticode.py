@@ -3,8 +3,9 @@ from sign_file import authenticode_sign_binary
 import tempfile
 from os import unlink
 
+
 def make_canary_authenticode_binary(hostname=None, filebody=[]):
-    unsigned_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+    unsigned_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
     unsigned_file.write(filebody)
     unsigned_file.close()
 
@@ -20,5 +21,5 @@ def make_canary_authenticode_binary(hostname=None, filebody=[]):
     unlink(unsigned_file.name)
 
     if len(contents) == 0:
-        raise Exception('Could not sign this file.')
+        raise Exception("Could not sign this file.")
     return contents

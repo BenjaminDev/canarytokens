@@ -3,17 +3,20 @@ Class that receives alerts, and dispatches them to the registered endpoint.
 """
 
 from twisted.logger import Logger
+
 log = Logger()
 
 from exception import DuplicateChannel, InvalidChannel
 
+
 class Switchboard(object):
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         """Return a new Switchboard instance."""
         self.input_channels = {}
         self.output_channels = {}
-        log.info('Canarytokens switchboard started')
-
+        log.info("Canarytokens switchboard started")
 
     def add_input_channel(self, name=None, channel=None):
         """Register a new input channel with the switchboard.
@@ -60,20 +63,25 @@ class Switchboard(object):
             canarydrop.add_canarydrop_hit(input_channel=input_channel, **kwargs)
 
             if not canarydrop.alertable():
-                log.warn('Token {token} is not alertable at this stage.'\
-                        .format(token=canarydrop.canarytoken.value()))
+                log.warn(
+                    "Token {token} is not alertable at this stage.".format(
+                        token=canarydrop.canarytoken.value()
+                    )
+                )
                 return
 
-            #update accounting info
-            canarydrop.alerting(input_channel=input_channel,**kwargs)
+            # update accounting info
+            canarydrop.alerting(input_channel=input_channel, **kwargs)
 
             for requested_output_channel in canarydrop.get_requested_output_channels():
                 try:
                     output_channel = self.output_channels[requested_output_channel]
-                    output_channel.send_alert(canarydrop=canarydrop,
-                                              input_channel=self.input_channels[input_channel],
-                                              **kwargs)
+                    output_channel.send_alert(
+                        canarydrop=canarydrop,
+                        input_channel=self.input_channels[input_channel],
+                        **kwargs
+                    )
                 except KeyError as e:
-                    raise Exception('Error sending alert: {err}'.format(err=e.message))
+                    raise Exception("Error sending alert: {err}".format(err=e.message))
         except Exception as e:
-            log.error('Exception occurred in switchboard dispatch: {err}'.format(err=e))
+            log.error("Exception occurred in switchboard dispatch: {err}".format(err=e))

@@ -40,8 +40,7 @@ class KubeConfig():
 
         _d = d[random.randint(0,len(d)-1)]
         return "%s%s%s%s%s" % (k[random.randint(0,len(k)-1)], _d, t[random.randint(0,len(t))-1], _d, r[random.randint(0,len(r)-1)])
-import requests
-requests.post
+
     def get_kubeconfig(self):
         try:
             # Using an OrderedDict here to ensure the output kubeconfig matches the ideal kubeconfig structure
