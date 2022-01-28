@@ -14,21 +14,21 @@ from twisted.logger import Logger
 log = Logger()
 
 import settings
-from channel_dns import DNSServerFactory, ChannelDNS
-from channel_http import ChannelHTTP
-from channel_input_imgur import ChannelImgur
+from canarytokens.channel_dns import DNSServerFactory, ChannelDNS
+# from channel_http import ChannelHTTP
+# from channel_input_imgur import ChannelImgur
 # from channel_input_linkedin import ChannelLinkedIn
 # from channel_input_bitcoin import ChannelBitcoin
 # from channel_input_smtp import ChannelSMTP
-from channel_input_mtls import ChannelKubeConfig
-from channel_input_mysql import ChannelMySQL
+# from channel_input_mtls import ChannelKubeConfig
+# from channel_input_mysql import ChannelMySQL
 # from channel_input_wireguard import ChannelWireGuard
 # from channel_output_email import EmailOutputChannel
 # from channel_output_twilio import TwilioOutputChannel
-from channel_output_webhook import WebhookOutputChannel
-from switchboard import Switchboard
+from canarytokens.channel_output_webhook import WebhookOutputChannel
+from canarytokens.switchboard import Switchboard
 
-from queries import update_tor_exit_nodes_loop
+from canarytokens.queries import update_tor_exit_nodes_loop
 
 application = service.Application('Canarydrops Switchboard')
 

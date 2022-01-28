@@ -1,0 +1,2 @@
+class RecreatingDBException(Exception):
+    pass

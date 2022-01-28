@@ -1,7 +1,33 @@
 import random
 import re
-
+import enum
 from exception import NoCanarytokenFound
+
+
+class TokenTypes(enum.Enum):
+    WEB = "web"
+    DNS = "dns"
+    WEB_IMAGE = "web_image"
+    MS_WORD = "ms_word"
+    MS_EXCEL = "ms_exel"
+    ADOBE_PDF = "adobe_pdf"
+    WIREGUARD = "wireguard"
+    WINDOWS_DIR = "windows_dir"
+    CLONEDSITE = "clonedsite"
+    QR_CODE = "qr_code"
+    SVN= "svn"
+    SMTP = "smtp"
+    SQL_SERVER="sql_server"
+    MY_SQL = "my_sql"
+    AWS_KEYS = "aws_keys"
+    SIGNED_EXE = "signed_exe"
+    FAST_REDIRECT = "fast_redirect"
+    SLOW_REDIRECT = "slow_redirect"
+    KUBE_CONFIG = "kubeconfig"
+    LOG_4_SHELL = "log4shell"
+    def __str__(self) -> str:
+        return str(self.value)
+
 
 canarytoken_ALPHABET = [
     'a',
@@ -82,7 +108,7 @@ class Canarytoken(object):
         )
 
     @staticmethod
-    def find_canarytoken(haystack):
+    def find_canarytoken(haystack:str):
         """Return the canarytoken found in haystack.
 
         Arguments:
@@ -102,28 +128,28 @@ class Canarytoken(object):
     ):
         return self._value
 
-    def __repr__(
-        self,
-    ):
-        return '<Canarytoken - %s>' % self._value
+    # def __repr__(
+    #     self,
+    # ):
+    #     return '<Canarytoken - %s>' % self._value
 
 
-if __name__ == '__main__':
-    print((Canarytoken()))
-    token = Canarytoken().value()
-    print(token)
-    print((Canarytoken(value=token)))
+# if __name__ == '__main__':
+#     print((Canarytoken()))
+#     token = Canarytoken().value()
+#     print(token)
+#     print((Canarytoken(value=token)))
 
-    bad_tokens = []
-    # short value
-    bad_tokens.append(token[:1])
+#     bad_tokens = []
+#     # short value
+#     bad_tokens.append(token[:1])
 
-    # invalid char token
-    bad_tokens.append('!' + token[1:])
+#     # invalid char token
+#     bad_tokens.append('!' + token[1:])
 
-    for t in bad_tokens:
-        try:
-            print((Canarytoken(value=t)))
-            assert False
-        except NoCanarytokenFound:
-            print(('Invalid token %s detected' % t))
+#     for t in bad_tokens:
+#         try:
+#             print((Canarytoken(value=t)))
+#             assert False
+#         except NoCanarytokenFound:
+#             print(('Invalid token %s detected' % t))

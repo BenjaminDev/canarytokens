@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # On Linux, you may need to update USER_UID and USER_GID below if not your local UID is not 1000.
+        USER_UID: 1000
+        USER_GID: 1000
+
+    init: true
+    volumes:
+      # Forwards the local Docker socket to the container.
+      - /var/run/docker.sock:/var/run/docker-host.sock
+      # Update this to wherever you want VS Code to mount the folder of your project
+      - ..:/workspace:cached
+    ports:
+      - "5354:5354/udp"
+    # Overrides default command so things don't shut down after the process ends.
+    entrypoint: /usr/local/share/docker-init.sh
+    command: sleep infinity
+    depends_on:
+      - redis
+    # network_mode: service:db
+    # Uncomment the next four lines if you will use a ptrace-based debuggers like C++, Go, and Rust.
+    # cap_add:
+    #  - SYS_PTRACE
+    # security_opt:
+    #   - seccomp:unconfined
+
+    # Uncomment the next line to use a non-root user for all processes.
+    # user: vscode
+  redis:
+    image: redis@sha256:03f00cd789243846888e2f834c762f53b224b9970b434a192b0f6b533d7e219c
+    container_name: "redis-store"
+    # entrypoint: >
+    #     redis-server
+    #       --loadmodule /usr/lib/redis/modules/redisearch.so
+    ports:
+      - "6379:6379"
+    volumes:
+      - db-data:/data
+  # db:
+  #   image: edgedb/edgedb:latest
+  #   volumes:
+  #     - db-data:/var/lib/edgedb/data
+  #   ports:
+  #     - "5656:5656"
+  #     - "8888:8888"
+  #     - "8889:8889"
+  #   environment:
+  #     - &pwd EDGEDB_PASSWORD=some-password
+  #     - EDGEDB_SERVER_GENERATE_SELF_SIGNED_CERT=1
+      # - EDGEDB_CLIENT_TLS_SECURITY=insecure
+      # - EDGEDB_CLIENT_SECURITY=insecure_dev_mode
+    # environment:
+    #   - EDGEDB_PASSWORD:password
+    #   - EDGEDB_USER:edgedb
+    #   - EDGEDB_AUTH_METHOD:trust
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+volumes:
+  db-data:

@@ -1,3 +1,4 @@
+from twisted.web.client import getPage
 import base64
 import datetime
 import urllib.error
@@ -10,7 +11,7 @@ from twisted.logger import Logger
 
 import settings
 from exception import LinkedInFailure
-from redismanager import (
+from canarytokens.redismanager import (
     KEY_BITCOIN_ACCOUNT, KEY_BITCOIN_ACCOUNTS,
     KEY_CANARY_DOMAINS, KEY_CANARY_GOOGLE_API_KEY,
     KEY_CANARY_IP_CACHE, KEY_CANARY_NXDOMAINS,
@@ -23,133 +24,135 @@ from redismanager import (
     KEY_KUBECONFIG_SERVEREP, KEY_LINKEDIN_ACCOUNT,
     KEY_LINKEDIN_ACCOUNTS, KEY_TOR_EXIT_NODES,
     KEY_USER_ACCOUNT, KEY_WEBHOOK_IDX,
-    KEY_WIREGUARD_KEYMAP, db,
+    KEY_WIREGUARD_KEYMAP, DB,
 )
 
 log = Logger()
-from twisted.web.client import getPage
 
 
 def get_canarydrop(canarytoken=None):
-    canarydrop = db.hgetall(KEY_CANARYDROP + canarytoken)
+    canarydrop = DB.get_db().get_db().hgetall(KEY_CANARYDROP + canarytoken)
     if 'triggered_list' in list(canarydrop.keys()):
-        canarydrop['triggered_list'] = simplejson.loads(canarydrop['triggered_list'])
+        canarydrop['triggered_list'] = simplejson.loads(
+            canarydrop['triggered_list'])
     return canarydrop
 
 
 def get_all_canary_sites():
-    return ['http://' + x for x in get_all_canary_domains()]
+    return [f'http://{str(o)}' for o in get_all_canary_domains()]
 
 
 def get_all_canary_path_elements():
-    return list(db.smembers(KEY_CANARY_PATH_ELEMENTS))
+    return list(DB.get_db().smembers(KEY_CANARY_PATH_ELEMENTS))
 
 
 def add_canary_path_element(path_element=None):
     if not path_element:
         raise ValueError
 
-    return db.sadd(KEY_CANARY_PATH_ELEMENTS, path_element)
+    return DB.get_db().sadd(KEY_CANARY_PATH_ELEMENTS, path_element)
 
 
 def get_all_canary_pages():
-    return list(db.smembers(KEY_CANARY_PAGES))
+    return list(DB.get_db().smembers(KEY_CANARY_PAGES))
 
 
 def add_canary_page(page=None):
     if not page:
         raise ValueError
 
-    return db.sadd(KEY_CANARY_PAGES, page)
+    return DB.get_db().sadd(KEY_CANARY_PAGES, page)
 
 
 def get_all_canary_domains():
-    return list(db.smembers(KEY_CANARY_DOMAINS))
+    # TODO: leave as a set?
+    return [o for o in DB.get_db().smembers(KEY_CANARY_DOMAINS)]
 
 
 def get_all_canary_nxdomains():
-    return list(db.smembers(KEY_CANARY_NXDOMAINS))
+    return list(DB.get_db().smembers(KEY_CANARY_NXDOMAINS))
 
 
 def get_canary_google_api_key():
-    return db.get(KEY_CANARY_GOOGLE_API_KEY)
+    return DB.get_db().get(KEY_CANARY_GOOGLE_API_KEY)
 
 
-def add_canary_domain(domain=None):
-    if not domain:
-        raise ValueError
+def add_canary_domain(domain:str):
+    return DB.get_db().sadd(KEY_CANARY_DOMAINS, domain)
 
-    return db.sadd(KEY_CANARY_DOMAINS, domain)
-
+def remove_canary_domain():
+    return DB.get_db().delete(KEY_CANARY_DOMAINS)
 
 def add_canary_nxdomain(domain=None):
     if not domain:
         raise ValueError
 
-    return db.sadd(KEY_CANARY_NXDOMAINS, domain)
+    return DB.get_db().sadd(KEY_CANARY_NXDOMAINS, domain)
 
 
 def add_canary_google_api_key(key=None):
     if not key:
         return None
 
-    return db.set(KEY_CANARY_GOOGLE_API_KEY, key)
+    return DB.get_db().set(KEY_CANARY_GOOGLE_API_KEY, key)
 
 
 def add_email_token_idx(email, canarytoken):
-    return db.sadd(KEY_EMAIL_IDX + email, canarytoken)
+    return DB.get_db().sadd(KEY_EMAIL_IDX + email, canarytoken)
 
 
 def add_webhook_token_idx(webhook, canarytoken):
-    return db.sadd(KEY_WEBHOOK_IDX + webhook, canarytoken)
+    return DB.get_db().sadd(KEY_WEBHOOK_IDX + webhook, canarytoken)
 
 
 def delete_email_tokens(email_address):
-    for token in db.smembers(KEY_EMAIL_IDX + email_address):
-        db.delete(KEY_CANARYDROP + token)
+    for token in DB.get_db().smembers(KEY_EMAIL_IDX + email_address):
+        DB.get_db().delete(KEY_CANARYDROP + token)
     # delete idx set
-    db.delete(KEY_EMAIL_IDX + email_address)
+    DB.get_db().delete(KEY_EMAIL_IDX + email_address)
 
 
 def delete_webhook_tokens(webhook):
-    for token in db.smembers(KEY_WEBHOOK_IDX + webhook):
-        db.delete(KEY_CANARYDROP + token)
+    for token in DB.get_db().smembers(KEY_WEBHOOK_IDX + webhook):
+        DB.get_db().delete(KEY_CANARYDROP + token)
     # delete idx set
-    db.delete(KEY_WEBHOOK_IDX + webhook)
+    DB.get_db().delete(KEY_WEBHOOK_IDX + webhook)
 
 
 def list_email_tokens(email_address):
-    return db.smembers(KEY_EMAIL_IDX + email_address)
+    return DB.get_db().smembers(KEY_EMAIL_IDX + email_address)
 
 
 def list_webhook_tokens(webhook):
-    return db.smembers(KEY_WEBHOOK_IDX + webhook)
+    return DB.get_db().smembers(KEY_WEBHOOK_IDX + webhook)
 
 
-def save_canarydrop(canarydrop=None):
-    """Persist a Canarydrop into the Redis instance.
+def save_canarydrop(canarydrop):
+    """
+    Persist a Canarydrop into the Redis instance.
     Arguments:
     canarydrop -- Canarydrop object.
     """
-    if not canarydrop:
-        raise ValueError
 
     canarytoken = canarydrop.canarytoken
+    DB.get_db().hset(KEY_CANARYDROP + canarytoken.value(), mapping=canarydrop.serialize())
 
-    db.hmset(KEY_CANARYDROP + canarytoken.value(), canarydrop.serialize())
-
-    log.info('Saved canarydrop: {canarydrop}'.format(canarydrop=canarydrop.serialize()))
+    log.info('Saved canarydrop: {canarydrop}'.format(
+        canarydrop=canarydrop.serialize()))
 
     # if the canarydrop is new, save to the timeline
-    if db.zscore(KEY_CANARYDROPS_TIMELINE, canarytoken.value()) == None:
+    if DB.get_db().zscore(KEY_CANARYDROPS_TIMELINE, canarytoken.value()) == None:
         current_time = datetime.datetime.utcnow().strftime('%s.%f')
-        db.zadd(KEY_CANARYDROPS_TIMELINE, current_time, canarytoken.value())
+        DB.get_db().zadd(KEY_CANARYDROPS_TIMELINE, {
+            canarytoken.value(): current_time})
 
     if canarydrop['alert_email_recipient']:
-        add_email_token_idx(canarydrop['alert_email_recipient'], canarytoken.value())
+        add_email_token_idx(
+            canarydrop['alert_email_recipient'], canarytoken.value())
 
     if canarydrop['alert_webhook_url']:
-        add_webhook_token_idx(canarydrop['alert_webhook_url'], canarytoken.value())
+        add_webhook_token_idx(
+            canarydrop['alert_webhook_url'], canarytoken.value())
 
 
 def get_canarydrop_triggered_list(canarytoken):
@@ -157,7 +160,7 @@ def get_canarydrop_triggered_list(canarytoken):
     Returns the triggered list for a Canarydrop, or {} if it does not exist
     """
     key = KEY_CANARYDROP + canarytoken.value()
-    triggered_list = db.hget(key, 'triggered_list')
+    triggered_list = DB.get_db().hget(key, 'triggered_list')
     if not triggered_list:
         triggered_list = {}
     else:
@@ -166,7 +169,7 @@ def get_canarydrop_triggered_list(canarytoken):
         triggered_list = {
             k: v
             for k, v in triggered_list.items()
-            if k in sorted(triggered_list.keys())[-settings.MAX_HISTORY :]
+            if k in sorted(triggered_list.keys())[-settings.MAX_HISTORY:]
         }
     return triggered_list
 
@@ -195,9 +198,11 @@ def add_canarydrop_hit(canarytoken, input_channel, hit_time=None, **kwargs):
             kwargs['src_data']['aws_keys_event_source_ip'],
         )
     elif kwargs.get('src_ip', None):
-        triggered_list[triggered_key]['geo_info'] = get_geoinfo(kwargs['src_ip'])
-        triggered_list[triggered_key]['is_tor_relay'] = is_tor_relay(kwargs['src_ip'])
-    db.hset(
+        triggered_list[triggered_key]['geo_info'] = get_geoinfo(
+            kwargs['src_ip'])
+        triggered_list[triggered_key]['is_tor_relay'] = is_tor_relay(
+            kwargs['src_ip'])
+    DB.get_db().hset(
         KEY_CANARYDROP + canarytoken.value(),
         'triggered_list',
         simplejson.dumps(triggered_list),
@@ -219,7 +224,7 @@ def add_additional_info_to_hit(canarytoken, hit_time, additional_info=None):
                 triggered_list[hit_time]['additional_info'][k].update(v)
             else:
                 triggered_list[hit_time]['additional_info'][k] = v
-        db.hset(
+        DB.get_db().hset(
             KEY_CANARYDROP + canarytoken.value(),
             'triggered_list',
             simplejson.dumps(triggered_list),
@@ -300,18 +305,19 @@ def get_geoinfo_from_ip(ip):
             'http://ipinfo.io/' + ip + '/json/', auth=(settings.IPINFO_API_KEY, ''),
         )
     if resp.status_code != 200:
-        raise Exception('ipinfo.io response was unexpected: {resp}'.format(resp=resp))
+        raise Exception(
+            'ipinfo.io response was unexpected: {resp}'.format(resp=resp))
     return resp.json()
 
 
 def get_geoinfo_from_cache(ip):
     key = KEY_CANARY_IP_CACHE + ip
-    return simplejson.loads(db.get(key))
+    return simplejson.loads(DB.get_db().get(key))
 
 
 def is_ip_cached(ip):
     key = KEY_CANARY_IP_CACHE + ip
-    check = db.exists(key)
+    check = DB.get_db().exists(key)
     if check == 1:
         return True
     return False
@@ -323,7 +329,7 @@ def add_ip_to_cache(ip, geoinfo, exp_time=60 * 60 * 24):
     exp_time -- Expiry time for this IP (in seconds). Default set to 1 day.
     """
     key = KEY_CANARY_IP_CACHE + ip
-    db.setex(key, exp_time, simplejson.dumps(geoinfo))
+    DB.get_db().setex(key, exp_time, simplejson.dumps(geoinfo))
 
 
 def get_canarydrops(min_time='-inf', max_time='+inf'):
@@ -335,8 +341,9 @@ def get_canarydrops(min_time='-inf', max_time='+inf'):
                 epoch. Default is no limit.
     """
     canarydrops = []
-    for canarytoken in db.zrangebyscore(KEY_CANARYDROPS_TIMELINE, min_time, max_time):
-        canarydrops.append(Canarydrop(**get_canarydrop(canarytoken=canarytoken)))
+    for canarytoken in DB.get_db().zrangebyscore(KEY_CANARYDROPS_TIMELINE, min_time, max_time):
+        canarydrops.append(Canarydrop(
+            **get_canarydrop(canarytoken=canarytoken)))
     return canarydrops
 
 
@@ -349,7 +356,7 @@ def get_canarydrops_array(min_time='-inf', max_time='+inf'):
                 epoch. Default is no limit.
     """
     canarydrops = []
-    for canarytoken in db.zrangebyscore(KEY_CANARYDROPS_TIMELINE, min_time, max_time):
+    for canarytoken in DB.get_db().zrangebyscore(KEY_CANARYDROPS_TIMELINE, min_time, max_time):
         canarydrops.append(get_canarydrop(canarytoken=canarytoken))
     return canarydrops
 
@@ -360,22 +367,22 @@ def load_user(username):
     username -- A username.
     """
     account_key = KEY_USER_ACCOUNT + username
-    if not db.exists(account_key):
+    if not DB.get_db().exists(account_key):
         return None
 
     from users import User
 
-    return User(db.hgetall(account_key))
+    return User(DB.get_db().hgetall(account_key))
 
 
 def lookup_canarytoken_alert_count(canarytoken):
     key = KEY_CANARYTOKEN_ALERT_COUNT + canarytoken.value()
-    return db.get(key)
+    return DB.get_db().get(key)
 
 
 def save_canarytoken_alert_count(canarytoken, count, expiry):
     key = KEY_CANARYTOKEN_ALERT_COUNT + canarytoken.value()
-    db.setex(key, expiry, count)
+    DB.get_db().setex(key, expiry, count)
 
 
 def save_clonedsite_token(clonedsite_token):
@@ -388,18 +395,20 @@ def save_clonedsite_token(clonedsite_token):
         + ':'
         + clonedsite_token['canarytoken']
     )
-    db.hmset(key, clonedsite_token)
-    db.sadd(KEY_CLONEDSITE_TOKENS, key)
+    DB.get_db().hmset(key, clonedsite_token)
+    DB.get_db().sadd(KEY_CLONEDSITE_TOKENS, key)
     return key
 
 
 def get_imgur_count(imgur_id=None):
     resp = requests.get(
-        'http://imgur.com/ajax/views?images={imgur_id}'.format(imgur_id=imgur_id),
+        'http://imgur.com/ajax/views?images={imgur_id}'.format(
+            imgur_id=imgur_id),
     )
     resp = resp.json()
     if not resp['success'] or resp['status'] != 200:
-        raise Exception('Imgur response was unexpected: {resp}'.format(resp=resp))
+        raise Exception(
+            'Imgur response was unexpected: {resp}'.format(resp=resp))
     return resp['data'][imgur_id]
 
 
@@ -411,15 +420,15 @@ def save_imgur_token(imgur_token):
         imgur_token['count'] = get_imgur_count(imgur_id=imgur_token['id'])
 
     key = KEY_IMGUR_TOKEN + imgur_token['id']
-    db.hmset(key, imgur_token)
-    db.sadd(KEY_IMGUR_TOKENS, key)
+    DB.get_db().hmset(key, imgur_token)
+    DB.get_db().sadd(KEY_IMGUR_TOKENS, key)
     return key
 
 
 def get_all_imgur_tokens():
     all_imgur_tokens = []
-    for key in db.smembers(KEY_IMGUR_TOKENS):
-        all_imgur_tokens.append(db.hgetall(key))
+    for key in DB.get_db().smembers(KEY_IMGUR_TOKENS):
+        all_imgur_tokens.append(DB.get_db().hgetall(key))
         all_imgur_tokens[-1]['count'] = int(all_imgur_tokens[-1]['count'])
     return all_imgur_tokens
 
@@ -447,7 +456,8 @@ def get_linkedin_viewer_count(username=None, password=None):
         except TwillException:
             pass
     if form_num == '':
-        log.error('Failed to parse LinkedIn login page - page format may have changed.')
+        log.error(
+            'Failed to parse LinkedIn login page - page format may have changed.')
         raise LinkedInFailure()
     # fv("login", 'session_password', 'LetsTryPrime')
     # fv("login", 'session_key', 'ms_DerrickWortham@endian.co.za')
@@ -464,7 +474,8 @@ def get_linkedin_viewer_count(username=None, password=None):
         ):
             user_listing = simplejson.loads(i.text.replace('\\u002d', '-'))
     except Exception as e:
-        log.error('Failed to extract user_listing from page: {error}'.format(error=e))
+        log.error(
+            'Failed to extract user_listing from page: {error}'.format(error=e))
         raise LinkedInFailure()
 
     try:
@@ -483,7 +494,7 @@ def get_linkedin_account(username_key=None, username=None):
     if username:
         username_key = KEY_LINKEDIN_ACCOUNT + username
 
-    data = db.hgetall(username_key)
+    data = DB.get_db().hgetall(username_key)
     try:
         data['count'] = int(data['count'])
     except KeyError:
@@ -493,7 +504,7 @@ def get_linkedin_account(username_key=None, username=None):
 
 def get_all_linkedin_accounts():
     all_linkedin_accounts = []
-    for key in db.smembers(KEY_LINKEDIN_ACCOUNTS):
+    for key in DB.get_db().smembers(KEY_LINKEDIN_ACCOUNTS):
         all_linkedin_accounts.append(get_linkedin_account(username_key=key))
     return all_linkedin_accounts
 
@@ -502,12 +513,12 @@ def create_linkedin_account(username=None, password=None, canarydrop=None):
 
     key = KEY_LINKEDIN_ACCOUNT + username
 
-    if db.exists(key):
+    if DB.get_db().exists(key):
         raise KeyError
 
     if not canarydrop:
-        from canarydrop import Canarydrop
-        from tokens import Canarytoken
+        from canarytokens.canarydrop import Canarydrop
+        from canarytokens.tokens import Canarytoken
 
         ht = Canarytoken()
         canarydrop = Canarydrop(canarytoken=ht.value())
@@ -532,8 +543,8 @@ def save_linkedin_account(linkedin_account=None):
         raise Exception('Cannot save an LinkedIn account without a canarydrop')
 
     key = KEY_LINKEDIN_ACCOUNT + linkedin_account['username']
-    db.hmset(key, linkedin_account)
-    db.sadd(KEY_LINKEDIN_ACCOUNTS, key)
+    DB.get_db().hmset(key, linkedin_account)
+    DB.get_db().sadd(KEY_LINKEDIN_ACCOUNTS, key)
     return key
 
 
@@ -541,7 +552,7 @@ def get_bitcoin_account(address_key=None, address=None):
     if address:
         address_key = KEY_BITCOIN_ACCOUNT + address
 
-    data = db.hgetall(address_key)
+    data = DB.get_db().hgetall(address_key)
     try:
         data['balance'] = int(data['balance'])
     except KeyError:
@@ -551,34 +562,37 @@ def get_bitcoin_account(address_key=None, address=None):
 
 def get_all_bitcoin_accounts():
     all_bitcoin_accounts = []
-    for key in db.smembers(KEY_BITCOIN_ACCOUNTS):
+    for key in DB.get_db().smembers(KEY_BITCOIN_ACCOUNTS):
         all_bitcoin_accounts.append(get_bitcoin_account(address_key=key))
     return all_bitcoin_accounts
 
 
 def get_bitcoin_address_balance(address=None):
     resp = requests.get(
-        'https://blockchain.info/q/addressbalance/{address}'.format(address=address),
+        'https://blockchain.info/q/addressbalance/{address}'.format(
+            address=address),
     )
 
     if resp.status_code != 200:
-        raise Exception('Bitcoin response was unexpected: {resp}'.format(resp=resp))
+        raise Exception(
+            'Bitcoin response was unexpected: {resp}'.format(resp=resp))
     try:
         return int(resp.content)
     except ValueError:
-        raise Exception('Bitcoin response was unexpected: {resp}'.format(resp=resp))
+        raise Exception(
+            'Bitcoin response was unexpected: {resp}'.format(resp=resp))
 
 
 def create_bitcoin_account(address=None, canarydrop=None):
 
     key = KEY_BITCOIN_ACCOUNT + address
 
-    if db.exists(key):
+    if DB.get_db().exists(key):
         raise KeyError
 
     if not canarydrop:
-        from canarydrop import Canarydrop
-        from tokens import Canarytoken
+        from canarytokens.canarydrop import Canarydrop
+        from canarytokens.tokens import Canarytoken
 
         ht = Canarytoken()
         canarydrop = Canarydrop(canarytoken=ht.value())
@@ -602,8 +616,8 @@ def save_bitcoin_account(bitcoin_account=None):
         raise Exception('Cannot save an Bitcoin account without a canarydrop')
 
     key = KEY_BITCOIN_ACCOUNT + bitcoin_account['address']
-    db.hmset(key, bitcoin_account)
-    db.sadd(KEY_BITCOIN_ACCOUNTS, key)
+    DB.get_db().hmset(key, bitcoin_account)
+    DB.get_db().sadd(KEY_BITCOIN_ACCOUNTS, key)
     return key
 
 
@@ -641,7 +655,8 @@ def is_webhook_valid(url):
         response.raise_for_status()
         return True
     except requests.exceptions.Timeout as e:
-        log.error('Timed out sending test payload to webhook: {url}'.format(url=url))
+        log.error(
+            'Timed out sending test payload to webhook: {url}'.format(url=url))
         return False
     except requests.exceptions.RequestException as e:
         log.error(
@@ -653,17 +668,18 @@ def is_webhook_valid(url):
 
 
 def is_tor_relay(ip):
-    if not db.exists(KEY_TOR_EXIT_NODES):
+    if not DB.get_db().exists(KEY_TOR_EXIT_NODES):
         update_tor_exit_nodes_loop()
-    return db.sismember(KEY_TOR_EXIT_NODES, simplejson.dumps(ip))
+    return DB.get_db().sismember(KEY_TOR_EXIT_NODES, simplejson.dumps(ip))
 
 
 def update_tor_exit_nodes(contents):
     if 'ExitAddress' in contents:
-        db.delete(KEY_TOR_EXIT_NODES)
+        DB.get_db().delete(KEY_TOR_EXIT_NODES)
     for line in contents.splitlines():
         if 'ExitAddress' in line:
-            db.sadd(KEY_TOR_EXIT_NODES, simplejson.dumps(line.split(' ')[1]))
+            DB.get_db().sadd(KEY_TOR_EXIT_NODES,
+                             simplejson.dumps(line.split(' ')[1]))
 
 
 def update_tor_exit_nodes_loop():
@@ -672,7 +688,7 @@ def update_tor_exit_nodes_loop():
 
 
 def get_certificate(key, _type=None):
-    certificate = db.hgetall('{}{}'.format(KEY_KUBECONFIG_CERTS, key))
+    certificate = DB.get_db().hgetall('{}{}'.format(KEY_KUBECONFIG_CERTS, key))
     if certificate is not None and _type is not None:
         return certificate.get(_type, None)
 
@@ -680,40 +696,40 @@ def get_certificate(key, _type=None):
 
 
 def save_certificate(key, cert_obj):
-    db.hmset('{}{}'.format(KEY_KUBECONFIG_CERTS, key), cert_obj)
+    DB.get_db().hmset('{}{}'.format(KEY_KUBECONFIG_CERTS, key), cert_obj)
 
 
 def save_kc_endpoint(endpoint):
-    db.set(KEY_KUBECONFIG_SERVEREP, endpoint)
+    DB.get_db().set(KEY_KUBECONFIG_SERVEREP, endpoint)
 
 
 def get_kc_endpoint():
-    return db.get(KEY_KUBECONFIG_SERVEREP)
+    return DB.get_db().get(KEY_KUBECONFIG_SERVEREP)
 
 
 def save_kc_hit_for_aggregation(key, hits, update=False):
     hit_key = '{}{}'.format(KEY_KUBECONFIG_HITS, key)
-    db.hset(hit_key, 'hits', hits)
+    DB.get_db().hset(hit_key, 'hits', hits)
 
     if not update:
         # typical timeout sent with each kubectl caching discovery request is 32s, and 5 requests are sent as part of each kubectl execution
-        db.expire(hit_key, 5 * 32)
+        DB.get_db().expire(hit_key, 5 * 32)
 
 
 def get_kc_hits(key):
     return (
-        db.hgetall('{}{}'.format(KEY_KUBECONFIG_HITS, key)),
-        db.pttl('{}{}'.format(KEY_KUBECONFIG_HITS, key)),
+        DB.get_db().hgetall('{}{}'.format(KEY_KUBECONFIG_HITS, key)),
+        DB.get_db().pttl('{}{}'.format(KEY_KUBECONFIG_HITS, key)),
     )
 
 
 def wireguard_keymap_add(public_key, canarytoken):
-    db.hset(KEY_WIREGUARD_KEYMAP, public_key, canarytoken)
+    DB.get_db().hset(KEY_WIREGUARD_KEYMAP, public_key, canarytoken)
 
 
 def wireguard_keymap_del(public_key):
-    db.hdel(KEY_WIREGUARD_KEYMAP, public_key)
+    DB.get_db().hdel(KEY_WIREGUARD_KEYMAP, public_key)
 
 
 def wireguard_keymap_get(public_key):
-    return db.hget(KEY_WIREGUARD_KEYMAP, public_key)
+    return DB.get_db().hget(KEY_WIREGUARD_KEYMAP, public_key)

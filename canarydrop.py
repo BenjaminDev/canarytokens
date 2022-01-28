@@ -20,14 +20,14 @@ from constants import (
     OUTPUT_CHANNEL_WEBHOOK,
 )
 from exception import NoCanarytokenPresent, NoUser, UnknownAttribute
-from queries import (
+from canarytokens.queries import (
     add_additional_info_to_hit, add_canarydrop_hit,
     get_all_canary_domains, get_all_canary_nxdomains,
     get_all_canary_pages, get_all_canary_path_elements,
     get_all_canary_sites, get_canarydrop_triggered_list,
     load_user,
 )
-from tokens import Canarytoken
+from canarytokens.tokens import Canarytoken
 from users import AnonymousUser, User
 
 
@@ -77,10 +77,11 @@ class Canarydrop(object):
             raise NoCanarytokenPresent()
 
         if 'timestamp' not in self._drop:
-            self._drop['timestamp'] = datetime.datetime.utcnow().strftime('%s.%f')
+            self._drop['timestamp'] = datetime.datetime.utcnow().strftime(
+                '%s.%f')
 
         if 'imgur_token' in self._drop and not self._drop['imgur_token']:
-            raise Exception('Missing imgur_token from Canarydrop')
+            raise Exception('Missing imgur_token from canarytokens.canarydrop')
 
         if 'user' not in self._drop or self._drop['user'] in ('None', 'Anonymous'):
             self._drop['user'] = AnonymousUser()
@@ -326,7 +327,7 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
         """Return a representation of this Canarydrop suitable for saving
         into redis."""
         serialized = self._drop.copy()
-
+        # serialized["type"] = repr(serialized["type"])
         if serialized['user']:
             serialized['user'] = serialized['user'].username
 

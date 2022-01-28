@@ -1,20 +1,34 @@
 import redis
-
+from canarytokens.exceptions import RecreatingDBException
 import settings
+import os
 
-db = redis.StrictRedis(
-    host=settings.REDIS_HOST,
-    port=settings.REDIS_PORT,
-    db=settings.REDIS_DB,
-    socket_timeout=10,
-)
-try:
-    db.ping()
-except Exception as e:
-    print('Could not connect to redis, bailing: {e}'.format(e=e))
-    import sys
+class DB:
+    _db = None
+    @classmethod
+    def get_db(cls):
+        if cls._db:
+            return cls._db
+        else:
+            # TODO: Fix settings / config this needs a global re think.
+            return cls.create_db(hostname="redis", port=6379)
+    @classmethod
+    def create_db(cls, *, hostname, port, logical_db=0):
+        if cls._db:
+            # TODO: rethink this. Should be fine but we may want to do better.
+            raise RecreatingDBException("A db connection exists and we recreating it!")
 
-    sys.exit(1)
+        cls._db = redis.StrictRedis(
+            host=hostname,
+            port=port,
+            db=logical_db,
+            socket_timeout=10,
+            encoding="utf-8",
+            decode_responses=True,
+        )
+        return cls._db
+
+
 
 # db.DEFAULT_EXPIRY = 120
 

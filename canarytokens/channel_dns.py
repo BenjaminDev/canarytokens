@@ -12,12 +12,12 @@ import re
 from exception import UnicodeDecodeError
 
 import settings
-from canarydrop import Canarydrop
+from canarytokens.canarydrop import Canarydrop
 from channel import InputChannel
 from constants import INPUT_CHANNEL_DNS
 from exception import NoCanarytokenFound, NoCanarytokenPresent
-from queries import get_all_canary_domains, get_canarydrop
-from tokens import Canarytoken
+from canarytokens.queries import get_all_canary_domains, get_canarydrop
+from canarytokens.tokens import Canarytoken
 
 
 class DNSServerFactory(server.DNSServerFactory, object):
