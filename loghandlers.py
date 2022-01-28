@@ -61,17 +61,17 @@ class errorsToWebhookLogObserver(object):
         @type event: L{dict}
         """
         if (
-            event["log_level"] == LogLevel.error
-            or event["log_level"] == LogLevel.critical
+            event['log_level'] == LogLevel.error
+            or event['log_level'] == LogLevel.critical
         ):
-            if event["log_namespace"] == "log_legacy":
+            if event['log_namespace'] == 'log_legacy':
                 # A log from the legacy logger has been called, therefore use a different key to get the log message
-                postdata = {"text": event["log_text"]}
+                postdata = {'text': event['log_text']}
             else:
-                postdata = {"text": event["log_format"]}
+                postdata = {'text': event['log_format']}
             if (
-                postdata["text"] == "Unhandled error in Deferred:"
-                or postdata["text"] == text_for_failed_email_address_entered
+                postdata['text'] == 'Unhandled error in Deferred:'
+                or postdata['text'] == text_for_failed_email_address_entered
             ):
                 # filters out non useful spam of messages seen before with these exact contents
                 return
@@ -80,17 +80,17 @@ class errorsToWebhookLogObserver(object):
 
 def httpRequest(postdata):
     agent = Agent(reactor)
-    headers = {"Content-Type": ["application/x-www-form-urlencoded"]}
+    headers = {'Content-Type': ['application/x-www-form-urlencoded']}
     data_str = json.dumps(postdata)
     body = BytesProducer(data_str)
     url = settings.ERROR_LOG_WEBHOOK
-    d = agent.request("POST", url, Headers(headers), body)
+    d = agent.request('POST', url, Headers(headers), body)
 
     def handle_response(response):
         if response.code == 200:
-            d = defer.succeed("")
+            d = defer.succeed('')
         else:
-            log.warn("Failed to post to webhook")
+            log.warn('Failed to post to webhook')
             d = None
         return d
 
@@ -98,7 +98,7 @@ def httpRequest(postdata):
     return d
 
 
-def webhookLogObserver(recordSeparator="\x1e"):
+def webhookLogObserver(recordSeparator='\x1e'):
     """
     Create a L{errorsToWebhookLogObserver} that emits error and critical
     loglines' text to a specified webhook URL by doing a HTTP POST.
@@ -111,5 +111,5 @@ def webhookLogObserver(recordSeparator="\x1e"):
 
     """
     return errorsToWebhookLogObserver(
-        lambda event: "{0}{1}\n".format(recordSeparator, eventAsJSON(event))
+        lambda event: '{0}{1}\n'.format(recordSeparator, eventAsJSON(event)),
     )

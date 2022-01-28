@@ -21,33 +21,33 @@ class TwilioOutputChannel(OutputChannel):
     def do_send_alert(self, input_channel=None, canarydrop=None, **kwargs):
         try:
             msg = input_channel.format_canaryalert(
-                params={"body_length": 140}, canarydrop=canarydrop, **kwargs
+                params={'body_length': 140}, canarydrop=canarydrop, **kwargs,
             )
 
             client = TwilioRestClient(
-                settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN
+                settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN,
             )
 
-            if len(canarydrop["alert_sms_recipient"]) == 0:
+            if len(canarydrop['alert_sms_recipient']) == 0:
                 raise Exception(
-                    "No SMS recipient for token: {token}".format(
-                        token=canarydrop["canarytoken"]
-                    )
+                    'No SMS recipient for token: {token}'.format(
+                        token=canarydrop['canarytoken'],
+                    ),
                 )
 
             if settings.DEBUG:
                 pprint.pprint(msg)
             else:
                 client.messages.create(
-                    to=canarydrop["alert_sms_recipient"],
+                    to=canarydrop['alert_sms_recipient'],
                     from_=settings.TWILIO_FROM_NUMBER,
-                    body=msg["body"],
+                    body=msg['body'],
                 )
             log.info(
-                "Sent SMS alert to {recipient} for token {token}".format(
-                    recipient=canarydrop["alert_sms_recipient"],
+                'Sent SMS alert to {recipient} for token {token}'.format(
+                    recipient=canarydrop['alert_sms_recipient'],
                     token=canarydrop.canarytoken.value(),
-                )
+                ),
             )
         except Exception as e:
-            log.error("Twilio send failed: {error}".format(error=e))
+            log.error('Twilio send failed: {error}'.format(error=e))

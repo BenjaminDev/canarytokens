@@ -13,13 +13,13 @@ def patchDNSModule():
     import twisted.names.dns
 
     twisted.names.dns.CAA = 257
-    twisted.names.dns.QUERY_TYPES[twisted.names.dns.CAA] = "CAA"
+    twisted.names.dns.QUERY_TYPES[twisted.names.dns.CAA] = 'CAA'
 
 
 def patchCommonModule():
     import twisted.names.common
 
-    twisted.names.common.typeToMethod[twisted.names.dns.CAA] = "lookupCAA"
+    twisted.names.common.typeToMethod[twisted.names.dns.CAA] = 'lookupCAA'
 
     def lookupCAA(self, name, timeout=None):
         return self._lookup(name, twisted.names.dns.IN, twisted.names.dns.CAA, timeout)
@@ -38,7 +38,7 @@ def patchResolveModule():
         d = self.resolvers[0].lookupCAA(name, timeout)
         for r in self.resolvers[1:]:
             d = d.addErrback(
-                twisted.names.resolve.FailureHandler(r.lookupCAA, name, timeout)
+                twisted.names.resolve.FailureHandler(r.lookupCAA, name, timeout),
             )
         return d
 

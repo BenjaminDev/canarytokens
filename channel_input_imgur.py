@@ -10,8 +10,10 @@ from twisted.web.client import getPage
 from canarydrop import Canarydrop
 from channel import InputChannel
 from constants import INPUT_CHANNEL_IMGUR
-from queries import (get_all_imgur_tokens, get_canarydrop, get_imgur_count,
-                     save_imgur_token)
+from queries import (
+    get_all_imgur_tokens, get_canarydrop, get_imgur_count,
+    save_imgur_token,
+)
 
 
 class ChannelImgur(InputChannel):
@@ -40,28 +42,28 @@ class ChannelImgur(InputChannel):
 
     def poll(self, imgur_token=None):
         try:
-            count = get_imgur_count(imgur_id=imgur_token["id"])
-            if count > imgur_token["count"]:
+            count = get_imgur_count(imgur_id=imgur_token['id'])
+            if count > imgur_token['count']:
                 canarydrop = Canarydrop(
-                    **get_canarydrop(canarytoken=imgur_token["canarytoken"])
+                    **get_canarydrop(canarytoken=imgur_token['canarytoken']),
                 )
                 self.dispatch(
-                    canarydrop=canarydrop, count=count, imgur_id=imgur_token["id"]
+                    canarydrop=canarydrop, count=count, imgur_id=imgur_token['id'],
                 )
-                imgur_token["count"] = count
+                imgur_token['count'] = count
                 save_imgur_token(imgur_token=imgur_token)
         except Exception as e:
-            log.warn("Imgur error: {error}".format(error=e))
+            log.warn('Imgur error: {error}'.format(error=e))
 
     def schedule_poll(self, imgur_token=None, delay=None):
         d = deferLater(reactor, delay, self.request_imgur_count, imgur_token)
 
     def request_imgur_count(self, imgur_token):
         d = getPage(
-            "http://imgur.com/ajax/views?images={imgur_id}".format(
-                imgur_id=imgur_token["id"]
+            'http://imgur.com/ajax/views?images={imgur_id}'.format(
+                imgur_id=imgur_token['id'],
             ),
-            agent="Canarytokens Imgur Check",
+            agent='Canarytokens Imgur Check',
         )
         d.addCallback(self.received_imgur_count, imgur_token)
         return d
@@ -69,29 +71,29 @@ class ChannelImgur(InputChannel):
     def received_imgur_count(self, body, imgur_token):
         try:
             body = simplejson.loads(body)
-            count = int(body["data"][imgur_token["id"]])
+            count = int(body['data'][imgur_token['id']])
             log.info(
-                "Count for imgur token " + imgur_token["id"] + " was " + str(count)
+                'Count for imgur token ' + imgur_token['id'] + ' was ' + str(count),
             )
-            if count > imgur_token["count"]:
+            if count > imgur_token['count']:
                 canarydrop = Canarydrop(
-                    **get_canarydrop(canarytoken=imgur_token["canarytoken"])
+                    **get_canarydrop(canarytoken=imgur_token['canarytoken']),
                 )
                 self.dispatch(
-                    canarydrop=canarydrop, count=count, imgur_id=imgur_token["id"]
+                    canarydrop=canarydrop, count=count, imgur_id=imgur_token['id'],
                 )
-                imgur_token["count"] = count
+                imgur_token['count'] = count
                 save_imgur_token(imgur_token=imgur_token)
         except Exception as e:
-            log.warn("Imgur error: {error}".format(error=e))
+            log.warn('Imgur error: {error}'.format(error=e))
 
     def format_additional_data(self, **kwargs):
         log.info(kwargs)
-        additional_report = ""
-        if "count" in kwargs and kwargs["count"]:
-            additional_report += "View Count: {count}\r\n".format(count=kwargs["count"])
-        if "imgur_id" in kwargs and kwargs["imgur_id"]:
-            additional_report += "Link: http://imgur.com/{imgur_id}\r\n".format(
-                imgur_id=kwargs["imgur_id"]
+        additional_report = ''
+        if 'count' in kwargs and kwargs['count']:
+            additional_report += 'View Count: {count}\r\n'.format(count=kwargs['count'])
+        if 'imgur_id' in kwargs and kwargs['imgur_id']:
+            additional_report += 'Link: http://imgur.com/{imgur_id}\r\n'.format(
+                imgur_id=kwargs['imgur_id'],
             )
         return additional_report

@@ -1,5 +1,5 @@
 """
-Output channel that sends emails. Relies on Mandrill, Sendgrid or SMTP to actually send mails.
+Output channel that sends emails. Relies on Sendgrid or SMTP to actually send mails.
 """
 import pprint
 
@@ -11,7 +11,6 @@ log = Logger()
 import smtplib
 from email.MIMEText import MIMEText
 
-import mandrill
 import requests
 import sendgrid
 from htmlmin import minify
@@ -32,8 +31,8 @@ except ImportError:
 class EmailOutputChannel(OutputChannel):
     CHANNEL = OUTPUT_CHANNEL_EMAIL
 
-    DESCRIPTION = "Canarytoken triggered"
-    TIME_FORMAT = "%Y-%m-%d %H:%M:%S (UTC)"
+    DESCRIPTION = 'Canarytoken triggered'
+    TIME_FORMAT = '%Y-%m-%d %H:%M:%S (UTC)'
 
     def format_report_html(
         self,
@@ -43,12 +42,12 @@ class EmailOutputChannel(OutputChannel):
 
         # Use the Flask app context to render the emails
         # (this generates the urls + schemes correctly)
-        rendered_html = env.get_template("emails/notification.html").render(
+        rendered_html = env.get_template('emails/notification.html').render(
             Title=self.DESCRIPTION,
             Intro=self.format_report_intro(),
             BasicDetails=self.get_basic_details(),
-            ManageLink=self.data["manage"],
-            HistoryLink=self.data["history"],
+            ManageLink=self.data['manage'],
+            HistoryLink=self.data['history'],
         )
         return minify(rendered_html)
 
@@ -56,110 +55,108 @@ class EmailOutputChannel(OutputChannel):
         self,
     ):
         if (
-            self.data["channel"] == "HTTP"
-            or self.data["channel"] == "AWS API Key Token"
+            self.data['channel'] == 'HTTP'
+            or self.data['channel'] == 'AWS API Key Token'
         ):
-            template = "An {Type} Canarytoken has been triggered"
+            template = 'An {Type} Canarytoken has been triggered'
         else:
-            template = "A {Type} Canarytoken has been triggered"
+            template = 'A {Type} Canarytoken has been triggered'
 
-        if "src_ip" in self.data:
-            template += " by the Source IP {src}.".format(src=self.data["src_ip"])
+        if 'src_ip' in self.data:
+            template += ' by the Source IP {src}.'.format(src=self.data['src_ip'])
 
-        if self.data["channel"] == "DNS":
+        if self.data['channel'] == 'DNS':
             template += (
-                "\n\nPlease note that the source IP refers to a DNS server,"
-                " rather than the host that triggered the token. "
+                '\n\nPlease note that the source IP refers to a DNS server,'
+                ' rather than the host that triggered the token. '
             )
 
-        if self.data["channel"] == "DNS" and self.data.get("tokentype") == "my_sql":
+        if self.data['channel'] == 'DNS' and self.data.get('tokentype') == 'my_sql':
             template = (
-                "Your MySQL token was tripped, but the attackers machine was unable to connect "
-                + "to the server directly. Instead, we can tell that it happened, and merely report "
-                + "on their DNS server. Source IP therefore refers to the DNS server used by the attacker."
+                'Your MySQL token was tripped, but the attackers machine was unable to connect '
+                + 'to the server directly. Instead, we can tell that it happened, and merely report '
+                + 'on their DNS server. Source IP therefore refers to the DNS server used by the attacker.'
             )
 
-        return template.format(Type=self.data["channel"])
+        return template.format(Type=self.data['channel'])
 
     def get_basic_details(
         self,
     ):
 
         vars = {
-            "Description": self.data["description"],
-            "Channel": self.data["channel"],
-            "Time": self.data["time"],
-            "Canarytoken": self.data["canarytoken"],
+            'Description': self.data['description'],
+            'Channel': self.data['channel'],
+            'Time': self.data['time'],
+            'Canarytoken': self.data['canarytoken'],
         }
 
-        if "src_ip" in self.data:
-            vars["src_ip"] = self.data["src_ip"]
-            vars["SourceIP"] = self.data["src_ip"]
+        if 'src_ip' in self.data:
+            vars['src_ip'] = self.data['src_ip']
+            vars['SourceIP'] = self.data['src_ip']
 
-        if "useragent" in self.data:
-            vars["User-Agent"] = self.data["useragent"]
+        if 'useragent' in self.data:
+            vars['User-Agent'] = self.data['useragent']
 
-        if "tokentype" in self.data:
-            vars["TokenType"] = self.data["tokentype"]
+        if 'tokentype' in self.data:
+            vars['TokenType'] = self.data['tokentype']
 
-        if "referer" in self.data:
-            vars["Referer"] = self.data["referer"]
+        if 'referer' in self.data:
+            vars['Referer'] = self.data['referer']
 
-        if "location" in self.data:
+        if 'location' in self.data:
             try:
-                vars["Location"] = self.data["location"].decode("utf-8")
+                vars['Location'] = self.data['location'].decode('utf-8')
             except Exception:
-                vars["Location"] = self.data["location"]
+                vars['Location'] = self.data['location']
 
-        if "log4_shell_computer_name" in self.data:
-            vars["Log4JComputerName"] = self.data["log4_shell_computer_name"]
+        if 'log4_shell_computer_name' in self.data:
+            vars['Log4JComputerName'] = self.data['log4_shell_computer_name']
 
         return vars
 
     def do_send_alert(self, input_channel=None, canarydrop=None, **kwargs):
         msg = input_channel.format_canaryalert(
             params={
-                "subject_required": True,
-                "from_display_required": True,
-                "from_address_required": True,
+                'subject_required': True,
+                'from_display_required': True,
+                'from_address_required': True,
             },
             canarydrop=canarydrop,
-            **kwargs
+            **kwargs,
         )
         self.data = msg
-        if "type" in canarydrop._drop:
-            self.data["tokentype"] = canarydrop._drop["type"]
+        if 'type' in canarydrop._drop:
+            self.data['tokentype'] = canarydrop._drop['type']
 
-        self.data["canarytoken"] = canarydrop["canarytoken"]
-        self.data["description"] = (
-            str(canarydrop["memo"], "utf8") if canarydrop["memo"] is not None else ""
+        self.data['canarytoken'] = canarydrop['canarytoken']
+        self.data['description'] = (
+            str(canarydrop['memo'], 'utf8') if canarydrop['memo'] is not None else ''
         )
         if settings.MAILGUN_DOMAIN_NAME and settings.MAILGUN_API_KEY:
             self.mailgun_send(msg=msg, canarydrop=canarydrop)
-        elif settings.MANDRILL_API_KEY:
-            self.mandrill_send(msg=msg, canarydrop=canarydrop)
         elif settings.SENDGRID_API_KEY:
             self.sendgrid_send(msg=msg, canarydrop=canarydrop)
         elif settings.SMTP_SERVER:
             self.smtp_send(msg=msg, canarydrop=canarydrop)
         else:
-            log.error("No email settings found")
+            log.error('No email settings found')
 
     def mailgun_send(self, msg=None, canarydrop=None):
         try:
-            base_url = "https://api.mailgun.net"
+            base_url = 'https://api.mailgun.net'
             if settings.MAILGUN_BASE_URL:
                 base_url = settings.MAILGUN_BASE_URL
-            url = "{}/v3/{}/messages".format(base_url, settings.MAILGUN_DOMAIN_NAME)
-            auth = ("api", settings.MAILGUN_API_KEY)
+            url = '{}/v3/{}/messages'.format(base_url, settings.MAILGUN_DOMAIN_NAME)
+            auth = ('api', settings.MAILGUN_API_KEY)
             data = {
-                "from": "{name} <{address}>".format(
-                    name=msg["from_display"], address=msg["from_address"]
+                'from': '{name} <{address}>'.format(
+                    name=msg['from_display'], address=msg['from_address'],
                 ),
-                "to": canarydrop["alert_email_recipient"],
-                "subject": msg["subject"],
-                "text": msg["body"],
-                "html": self.format_report_html(),
+                'to': canarydrop['alert_email_recipient'],
+                'subject': msg['subject'],
+                'text': msg['body'],
+                'html': self.format_report_html(),
             }
 
             if settings.DEBUG:
@@ -170,60 +167,24 @@ class EmailOutputChannel(OutputChannel):
                 result.raise_for_status()
 
             log.info(
-                "Sent alert to {recipient} for token {token}".format(
-                    recipient=canarydrop["alert_email_recipient"],
+                'Sent alert to {recipient} for token {token}'.format(
+                    recipient=canarydrop['alert_email_recipient'],
                     token=canarydrop.canarytoken.value(),
-                )
+                ),
             )
 
         except requests.exceptions.HTTPError as e:
-            log.error("A mailgun error occurred: %s - %s" % (e.__class__, e))
+            log.error('A mailgun error occurred: %s - %s' % (e.__class__, e))
 
-    def mandrill_send(self, msg=None, canarydrop=None):
-        try:
-            mandrill_client = mandrill.Mandrill(settings.MANDRILL_API_KEY)
-            message = {
-                "auto_html": None,
-                "auto_text": None,
-                "from_email": msg["from_address"],
-                "from_name": msg["from_display"],
-                "text": msg["body"],
-                "html": self.format_report_html(),
-                "subject": msg["subject"],
-                "to": [
-                    {
-                        "email": canarydrop["alert_email_recipient"],
-                        "name": "",
-                        "type": "to",
-                    }
-                ],
-            }
-            if settings.DEBUG:
-                pprint.pprint(message)
-            else:
-                result = mandrill_client.messages.send(
-                    message=message, async=False, ip_pool="Main Pool"
-                )
-            log.info(
-                "Sent alert to {recipient} for token {token}".format(
-                    recipient=canarydrop["alert_email_recipient"],
-                    token=canarydrop.canarytoken.value(),
-                )
-            )
-
-        except mandrill.Error as e:
-            # Mandrill errors are thrown as exceptions
-            log.error("A mandrill error occurred: %s - %s" % (e.__class__, e))
-            # A mandrill error occurred: <class 'mandrill.UnknownSubaccountError'> - No subaccount exists with the id 'customer-123'....
 
     def sendgrid_send(self, msg=None, canarydrop=None):
         try:
             sg = sendgrid.SendGridAPIClient(apikey=settings.SENDGRID_API_KEY)
-            from_email = Email(msg["from_address"], msg["from_display"])
-            subject = msg["subject"]
-            to_email = Email(canarydrop["alert_email_recipient"])
-            text = msg["body"]
-            content = Content("text/html", self.format_report_html())
+            from_email = Email(msg['from_address'], msg['from_display'])
+            subject = msg['subject']
+            to_email = Email(canarydrop['alert_email_recipient'])
+            text = msg['body']
+            content = Content('text/html', self.format_report_html())
             mail = Mail(from_email, subject, to_email, content)
 
             if settings.DEBUG:
@@ -232,24 +193,24 @@ class EmailOutputChannel(OutputChannel):
                 response = sg.client.mail.send.post(request_body=mail.get())
 
                 log.info(
-                    "Sent alert to {recipient} for token {token}".format(
-                        recipient=canarydrop["alert_email_recipient"],
+                    'Sent alert to {recipient} for token {token}'.format(
+                        recipient=canarydrop['alert_email_recipient'],
                         token=canarydrop.canarytoken.value(),
-                    )
+                    ),
                 )
 
         except urllib.HTTPError as e:
-            log.error("A sendgrid error occurred: %s - %s" % (e.__class__, e))
+            log.error('A sendgrid error occurred: %s - %s' % (e.__class__, e))
 
     def smtp_send(self, msg=None, canarydrop=None):
         try:
-            fromaddr = msg["from_address"]
-            toaddr = canarydrop["alert_email_recipient"]
+            fromaddr = msg['from_address']
+            toaddr = canarydrop['alert_email_recipient']
 
-            smtpmsg = MIMEText(msg["body"])
-            smtpmsg["From"] = fromaddr
-            smtpmsg["To"] = toaddr
-            smtpmsg["Subject"] = msg["subject"]
+            smtpmsg = MIMEText(msg['body'])
+            smtpmsg['From'] = fromaddr
+            smtpmsg['To'] = toaddr
+            smtpmsg['Subject'] = msg['subject']
 
             if settings.DEBUG:
                 pprint.pprint(message)
@@ -263,10 +224,10 @@ class EmailOutputChannel(OutputChannel):
                 server.sendmail(fromaddr, toaddr, text)
 
             log.info(
-                "Sent alert to {recipient} for token {token}".format(
-                    recipient=canarydrop["alert_email_recipient"],
+                'Sent alert to {recipient} for token {token}'.format(
+                    recipient=canarydrop['alert_email_recipient'],
                     token=canarydrop.canarytoken.value(),
-                )
+                ),
             )
         except smtplib.SMTPException as e:
-            log.error("A smtp error occurred: %s - %s" % (e.__class__, e))
+            log.error('A smtp error occurred: %s - %s' % (e.__class__, e))

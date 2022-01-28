@@ -15,51 +15,55 @@ import pyqrcode
 import simplejson
 
 import wireguard as wg
-from constants import (OUTPUT_CHANNEL_EMAIL, OUTPUT_CHANNEL_TWILIO_SMS,
-                       OUTPUT_CHANNEL_WEBHOOK)
+from constants import (
+    OUTPUT_CHANNEL_EMAIL, OUTPUT_CHANNEL_TWILIO_SMS,
+    OUTPUT_CHANNEL_WEBHOOK,
+)
 from exception import NoCanarytokenPresent, NoUser, UnknownAttribute
-from queries import (add_additional_info_to_hit, add_canarydrop_hit,
-                     get_all_canary_domains, get_all_canary_nxdomains,
-                     get_all_canary_pages, get_all_canary_path_elements,
-                     get_all_canary_sites, get_canarydrop_triggered_list,
-                     load_user)
+from queries import (
+    add_additional_info_to_hit, add_canarydrop_hit,
+    get_all_canary_domains, get_all_canary_nxdomains,
+    get_all_canary_pages, get_all_canary_path_elements,
+    get_all_canary_sites, get_canarydrop_triggered_list,
+    load_user,
+)
 from tokens import Canarytoken
 from users import AnonymousUser, User
 
 
 class Canarydrop(object):
     allowed_attrs = [
-        "alert_email_enabled",
-        "alert_email_recipient",
-        "alert_sms_enabled",
-        "alert_sms_recipient",
-        "alert_webhook_enabled",
-        "alert_webhook_url",
-        "canarytoken",
-        "triggered_count",
-        "triggered_list",
-        "memo",
-        "generated_url",
-        "generated_email",
-        "generated_hostname",
-        "timestamp",
-        "user",
-        "imgur_token",
-        "imgur",
-        "auth",
-        "browser_scanner_enabled",
-        "web_image_path",
-        "web_image_enabled",
-        "type",
-        "clonedsite",
-        "aws_secret_access_key",
-        "aws_access_key_id",
-        "redirect_url",
-        "region",
-        "output",
-        "slack_api_key",
-        "wg_key",
-        "kubeconfig",
+        'alert_email_enabled',
+        'alert_email_recipient',
+        'alert_sms_enabled',
+        'alert_sms_recipient',
+        'alert_webhook_enabled',
+        'alert_webhook_url',
+        'canarytoken',
+        'triggered_count',
+        'triggered_list',
+        'memo',
+        'generated_url',
+        'generated_email',
+        'generated_hostname',
+        'timestamp',
+        'user',
+        'imgur_token',
+        'imgur',
+        'auth',
+        'browser_scanner_enabled',
+        'web_image_path',
+        'web_image_enabled',
+        'type',
+        'clonedsite',
+        'aws_secret_access_key',
+        'aws_access_key_id',
+        'redirect_url',
+        'region',
+        'output',
+        'slack_api_key',
+        'wg_key',
+        'kubeconfig',
     ]
 
     def __init__(self, generate=False, **kwargs):
@@ -69,51 +73,51 @@ class Canarydrop(object):
                 raise UnknownAttribute(attribute=k)
             self._drop[k] = v
 
-        if "canarytoken" not in self._drop:
+        if 'canarytoken' not in self._drop:
             raise NoCanarytokenPresent()
 
-        if "timestamp" not in self._drop:
-            self._drop["timestamp"] = datetime.datetime.utcnow().strftime("%s.%f")
+        if 'timestamp' not in self._drop:
+            self._drop['timestamp'] = datetime.datetime.utcnow().strftime('%s.%f')
 
-        if "imgur_token" in self._drop and not self._drop["imgur_token"]:
-            raise Exception("Missing imgur_token from Canarydrop")
+        if 'imgur_token' in self._drop and not self._drop['imgur_token']:
+            raise Exception('Missing imgur_token from Canarydrop')
 
-        if "user" not in self._drop or self._drop["user"] in ("None", "Anonymous"):
-            self._drop["user"] = AnonymousUser()
+        if 'user' not in self._drop or self._drop['user'] in ('None', 'Anonymous'):
+            self._drop['user'] = AnonymousUser()
         else:
-            self._drop["user"] = load_user(self._drop["user"])
-            if not self._drop["user"]:
+            self._drop['user'] = load_user(self._drop['user'])
+            if not self._drop['user']:
                 raise NoUser()
 
-        if "auth" not in self._drop:
-            self._drop["auth"] = md5.md5(
-                str(random.SystemRandom().randrange(1, 2 ** 128))
+        if 'auth' not in self._drop:
+            self._drop['auth'] = md5.md5(
+                str(random.SystemRandom().randrange(1, 2 ** 128)),
             ).hexdigest()
 
-        if self._drop.get("browser_scanner_enabled", "") in ("True", True):
-            self._drop["browser_scanner_enabled"] = True
+        if self._drop.get('browser_scanner_enabled', '') in ('True', True):
+            self._drop['browser_scanner_enabled'] = True
         else:
-            self._drop["browser_scanner_enabled"] = False
+            self._drop['browser_scanner_enabled'] = False
 
-        if self._drop.get("alert_email_enabled", "") in ("True", True):
-            self._drop["alert_email_enabled"] = True
+        if self._drop.get('alert_email_enabled', '') in ('True', True):
+            self._drop['alert_email_enabled'] = True
         else:
-            self._drop["alert_email_enabled"] = False
+            self._drop['alert_email_enabled'] = False
 
-        if self._drop.get("alert_webhook_enabled", "") in ("True", True):
-            self._drop["alert_webhook_enabled"] = True
+        if self._drop.get('alert_webhook_enabled', '') in ('True', True):
+            self._drop['alert_webhook_enabled'] = True
         else:
-            self._drop["alert_webhook_enabled"] = False
+            self._drop['alert_webhook_enabled'] = False
 
-        if self._drop.get("alert_sms_enabled", "") in ("True", True):
-            self._drop["alert_sms_enabled"] = True
+        if self._drop.get('alert_sms_enabled', '') in ('True', True):
+            self._drop['alert_sms_enabled'] = True
         else:
-            self._drop["alert_sms_enabled"] = False
+            self._drop['alert_sms_enabled'] = False
 
-        if self._drop.get("web_image_enabled", "") in ("True", True):
-            self._drop["web_image_enabled"] = True
+        if self._drop.get('web_image_enabled', '') in ('True', True):
+            self._drop['web_image_enabled'] = True
         else:
-            self._drop["web_image_enabled"] = False
+            self._drop['web_image_enabled'] = False
 
         if generate:
             self.generate_random_url()
@@ -121,10 +125,10 @@ class Canarydrop(object):
 
     def add_additional_info_to_hit(self, hit_time=None, additional_info={}):
         try:
-            hit_time = hit_time or self._drop["hit_time"]
+            hit_time = hit_time or self._drop['hit_time']
         except:
-            hit_time = self._drop["hit_time"] = datetime.datetime.utcnow().strftime(
-                "%s.%f"
+            hit_time = self._drop['hit_time'] = datetime.datetime.utcnow().strftime(
+                '%s.%f',
             )
 
         if hit_time not in get_canarydrop_triggered_list(self.canarytoken):
@@ -132,14 +136,14 @@ class Canarydrop(object):
 
         add_additional_info_to_hit(self.canarytoken, hit_time, additional_info)
 
-    def add_canarydrop_hit(self, input_channel="http", **kwargs):
-        if "hit_time" in list(self._drop.keys()):
-            hit_time = self._drop["hit_time"]
+    def add_canarydrop_hit(self, input_channel='http', **kwargs):
+        if 'hit_time' in list(self._drop.keys()):
+            hit_time = self._drop['hit_time']
         else:
             hit_time = None
 
         add_canarydrop_hit(
-            self.canarytoken, input_channel=input_channel, hit_time=hit_time, **kwargs
+            self.canarytoken, input_channel=input_channel, hit_time=hit_time, **kwargs,
         )
 
     def get_url_components(
@@ -158,7 +162,7 @@ class Canarydrop(object):
         The random URL is also saved into the Canarydrop."""
         (sites, path_elements, pages) = self.get_url_components()
 
-        generated_url = sites[random.randint(0, len(sites) - 1)] + "/"
+        generated_url = sites[random.randint(0, len(sites) - 1)] + '/'
         path = []
         for count in range(0, random.randint(1, 3)):
             if len(path_elements) == 0:
@@ -167,15 +171,15 @@ class Canarydrop(object):
             elem = path_elements[random.randint(0, len(path_elements) - 1)]
             path.append(elem)
             path_elements.remove(elem)
-        path.append(self._drop["canarytoken"])
+        path.append(self._drop['canarytoken'])
 
         path.append(pages[random.randint(0, len(pages) - 1)])
 
-        generated_url += "/".join(path)
+        generated_url += '/'.join(path)
 
-        self._drop["generated_url"] = generated_url
+        self._drop['generated_url'] = generated_url
 
-        return self._drop["generated_url"]
+        return self._drop['generated_url']
 
     def get_random_site(
         self,
@@ -186,8 +190,8 @@ class Canarydrop(object):
     def get_url(
         self,
     ):
-        if "generated_url" in self._drop:
-            return self._drop["generated_url"]
+        if 'generated_url' in self._drop:
+            return self._drop['generated_url']
         return self.generate_random_url()
 
     def generate_random_hostname(self, with_random=False, nxdomain=False):
@@ -199,13 +203,13 @@ class Canarydrop(object):
             domains = get_all_canary_domains()
 
         if with_random:
-            generated_hostname = str(random.randint(1, 2 ** 24)) + "."
+            generated_hostname = str(random.randint(1, 2 ** 24)) + '.'
         else:
-            generated_hostname = ""
+            generated_hostname = ''
 
         generated_hostname += (
-            self._drop["canarytoken"]
-            + "."
+            self._drop['canarytoken']
+            + '.'
             + domains[random.randint(0, len(domains) - 1)]
         )
 
@@ -213,17 +217,17 @@ class Canarydrop(object):
 
     def get_hostname(self, with_random=False, as_url=False, nxdomain=False):
         if nxdomain:
-            if "generated_nx_hostname" not in self._drop:
-                self._drop["generated_nx_hostname"] = self.generate_random_hostname(
-                    with_random=with_random, nxdomain=True
+            if 'generated_nx_hostname' not in self._drop:
+                self._drop['generated_nx_hostname'] = self.generate_random_hostname(
+                    with_random=with_random, nxdomain=True,
                 )
-            return ("http://" if as_url else "") + self._drop["generated_nx_hostname"]
+            return ('http://' if as_url else '') + self._drop['generated_nx_hostname']
         else:
-            if "generated_hostname" not in self._drop:
-                self._drop["generated_hostname"] = self.generate_random_hostname(
-                    with_random=with_random, nxdomain=False
+            if 'generated_hostname' not in self._drop:
+                self._drop['generated_hostname'] = self.generate_random_hostname(
+                    with_random=with_random, nxdomain=False,
                 )
-            return ("http://" if as_url else "") + self._drop["generated_hostname"]
+            return ('http://' if as_url else '') + self._drop['generated_hostname']
 
     def get_requested_output_channels(
         self,
@@ -231,34 +235,34 @@ class Canarydrop(object):
         """Return a list containing the output channels configured in this
         Canarydrop."""
         channels = []
-        if self._drop.get("alert_email_enabled", False) and self._drop.get(
-            "alert_email_recipient", None
+        if self._drop.get('alert_email_enabled', False) and self._drop.get(
+            'alert_email_recipient', None,
         ):
             channels.append(OUTPUT_CHANNEL_EMAIL)
-        if self._drop.get("alert_webhook_enabled", False) and self._drop.get(
-            "alert_webhook_url", None
+        if self._drop.get('alert_webhook_enabled', False) and self._drop.get(
+            'alert_webhook_url', None,
         ):
             channels.append(OUTPUT_CHANNEL_WEBHOOK)
-        if self._drop.get("alert_sms_enabled", False) and self._drop.get(
-            "alert_sms_recipient", None
+        if self._drop.get('alert_sms_enabled', False) and self._drop.get(
+            'alert_sms_recipient', None,
         ):
             channels.append(OUTPUT_CHANNEL_TWILIO_SMS)
         return channels
 
     def _get_image_as_base64(self, path):
         if os.path.exists(path):
-            with open(path, "r") as f:
+            with open(path, 'r') as f:
                 contents = f.read()
             return base64.b64encode(contents)
 
     def get_web_image_as_base64(
         self,
     ):
-        return self._get_image_as_base64(self["web_image_path"])
+        return self._get_image_as_base64(self['web_image_path'])
 
     def get_secretkeeper_photo_as_base64(self, item):
         return self._get_image_as_base64(
-            self["triggered_list"][item]["additional_info"]["secretkeeper_photo"]
+            self['triggered_list'][item]['additional_info']['secretkeeper_photo'],
         )
 
     def get_cloned_site_javascript(
@@ -275,46 +279,46 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
 }
                 """
         return (
-            CLONED_SITE_JS.replace("CLONED_SITE_DOMAIN", self["clonedsite"])
-            .replace("CANARYTOKEN_SITE", self.get_random_site())
-            .replace("CANARYTOKEN", self["canarytoken"])
+            CLONED_SITE_JS.replace('CLONED_SITE_DOMAIN', self['clonedsite'])
+            .replace('CANARYTOKEN_SITE', self.get_random_site())
+            .replace('CANARYTOKEN', self['canarytoken'])
         )
 
     def get_qrcode_data_uri_png(
         self,
     ):
         qrcode = pyqrcode.create(self.get_url()).png_as_base64_str(scale=5)
-        return "data:image/png;base64,{qrcode}".format(qrcode=qrcode)
+        return 'data:image/png;base64,{qrcode}'.format(qrcode=qrcode)
 
     def get_wg_conf(self):
-        return wg.clientConfig(self._drop["wg_key"])
+        return wg.clientConfig(self._drop['wg_key'])
 
     def get_wg_qrcode(self):
         wg_conf = self.get_wg_conf()
         qrcode = pyqrcode.create(wg_conf).png_as_base64_str(scale=2)
-        return "data:image/png;base64,{}".format(qrcode)
+        return 'data:image/png;base64,{}'.format(qrcode)
 
     @property
     def canarytoken(self):
         """Return the Canarydrop's Canarytoken object."""
-        return Canarytoken(value=self._drop["canarytoken"])
+        return Canarytoken(value=self._drop['canarytoken'])
 
     @property
     def memo(self):
         """Return the Canarydrop's memo."""
-        return self._drop["memo"]
+        return self._drop['memo']
 
     @property
     def user(self):
-        return self._drop["user"]
+        return self._drop['user']
 
     @property
     def imgur_token(self):
-        return self._drop["imgur_token"]
+        return self._drop['imgur_token']
 
     @imgur_token.setter
     def imgur_token(self, value):
-        self._drop["imgur_token"] = value
+        self._drop['imgur_token'] = value
 
     def serialize(
         self,
@@ -323,12 +327,12 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
         into redis."""
         serialized = self._drop.copy()
 
-        if serialized["user"]:
-            serialized["user"] = serialized["user"].username
+        if serialized['user']:
+            serialized['user'] = serialized['user'].username
 
-        if "triggered_list" in list(serialized.keys()):
-            serialized["triggered_list"] = simplejson.dumps(
-                serialized["triggered_list"]
+        if 'triggered_list' in list(serialized.keys()):
+            serialized['triggered_list'] = simplejson.dumps(
+                serialized['triggered_list'],
             )
 
         return serialized

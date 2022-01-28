@@ -4,12 +4,14 @@ Class that encapsulates a user identity. Unused for now.
 
 import settings
 from exception import MissingAttribute, UnknownAttribute
-from queries import (lookup_canarytoken_alert_count,
-                     save_canarytoken_alert_count)
+from queries import (
+    lookup_canarytoken_alert_count,
+    save_canarytoken_alert_count,
+)
 
 
 class User(object):
-    allowed_attrs = ["username", "alert_count"]
+    allowed_attrs = ['username', 'alert_count']
 
     def __init__(self, alert_expiry=1, alert_limit=100, **kwargs):
         """Return a new UserPolicy object.
@@ -30,13 +32,13 @@ class User(object):
                 raise UnknownAttribute(attribute=k)
             self._user[k] = v
 
-        if "username" not in self._user:
+        if 'username' not in self._user:
             raise MissingAttribute(attribute=username)
 
     def is_anonymous(
         self,
     ):
-        return self._user["username"] == "Anonymous"
+        return self._user['username'] == 'Anonymous'
 
     def can_send_alert(self, canarydrop=None):
         try:
@@ -58,14 +60,14 @@ class User(object):
             alert_count = 1
 
         save_canarytoken_alert_count(
-            canarydrop.canarytoken, alert_count, self.alert_expiry
+            canarydrop.canarytoken, alert_count, self.alert_expiry,
         )
 
     @property
     def username(
         self,
     ):
-        return self._user["username"]
+        return self._user['username']
 
 
 class AnonymousUser(User):
@@ -75,7 +77,7 @@ class AnonymousUser(User):
     def __init__(self):
         User.__init__(
             self,
-            username="Anonymous",
+            username='Anonymous',
             alert_expiry=(5 if settings.DEBUG else 60),
             alert_limit=(
                 int(settings.MAX_ALERTS_PER_MINUTE)

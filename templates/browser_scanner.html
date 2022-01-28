@@ -5,7 +5,7 @@
         <noscript><meta http-equiv="refresh" content="0; {{redirect_url}}"></noscript>
         <link rel="icon" href="resources/favicon.png">
     </head>
-    {% endif %}    
+    {% endif %}
 <body>
   <link rel="icon" href="data:;base64,=">
   <iframe id="iframe" sandbox="allow-same-origin" style="display: none"></iframe>
@@ -501,7 +501,7 @@
       {% if redirect_url %}
       window.location = '{{redirect_url}}';
       {% endif %}
-      
+
       return;
       var iecomponent_version = PluginDetect.getVersion("iecomponent", "{89820200-ECBD-11CF-8B85-00AA005B4383}");
       results.textContent += 'iecomponent_version = '+ iecomponent_version + ' ';

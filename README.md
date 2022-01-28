@@ -91,3 +91,7 @@ minute is permitted.  Activity will still be recorded in the database, and visib
 the token management console, but alerts will not be generated (email and/or webhook).
 
 This is tunable with the switchboard ENV variable `CANARY_MAX_ALERTS_PER_MINUTE`.
+
+
+poetry run twistd -noy switchboard.tac --pidfile=switchboard.pid
+poetry run twistd -noy frontend.tac --pidfile=frontend.pid

@@ -1,16 +1,16 @@
 class UnknownAttribute(Exception):
     def __init__(self, attribute=None):
-        self.message = "{attribute} is unrecognized".format(attribute=attribute)
+        self.message = '{attribute} is unrecognized'.format(attribute=attribute)
 
 
 class MissingAttribute(Exception):
     def __init__(self, attribute=None):
-        self.message = "{attribute} is missing".format(attribute=attribute)
+        self.message = '{attribute} is missing'.format(attribute=attribute)
 
 
 class NoCanarytokenPresent(Exception):
     def __init__(self, attribute=None):
-        self.message = "{attribute} is unrecognized".format(attribute=attribute)
+        self.message = '{attribute} is unrecognized'.format(attribute=attribute)
 
 
 class NoCanarytokenFound(Exception):
@@ -20,7 +20,7 @@ class NoCanarytokenFound(Exception):
     def __str__(
         self,
     ):
-        return "No Canarytoken found in %s" % self._haystack
+        return 'No Canarytoken found in %s' % self._haystack
 
 
 class DuplicateChannel(Exception):
@@ -40,4 +40,7 @@ class LinkedInFailure(Exception):
 
 
 class BitcoinFailure(Exception):
+    pass
+
+class UnicodeDecodeError(Exception):
     pass

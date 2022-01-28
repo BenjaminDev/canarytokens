@@ -4,9 +4,11 @@ import random
 from math import ceil
 from time import time
 
-from OpenSSL.crypto import (FILETYPE_PEM, TYPE_RSA, X509, PKey, X509Extension,
-                            dump_certificate, dump_privatekey,
-                            load_certificate, load_privatekey)
+from OpenSSL.crypto import (
+    FILETYPE_PEM, TYPE_RSA, X509, PKey, X509Extension,
+    dump_certificate, dump_privatekey,
+    load_certificate, load_privatekey,
+)
 from twisted.application.internet import SSLServer
 from twisted.internet import defer, reactor
 from twisted.internet.error import CertificateError
@@ -19,9 +21,11 @@ from canarydrop import Canarydrop
 from channel import InputChannel
 from constants import INPUT_CHANNEL_MTLS
 from exception import NoCanarytokenFound, NoCanarytokenPresent
-from queries import (get_canarydrop, get_certificate, get_kc_hits,
-                     save_certificate, save_kc_endpoint,
-                     save_kc_hit_for_aggregation)
+from queries import (
+    get_canarydrop, get_certificate, get_kc_hits,
+    save_certificate, save_kc_endpoint,
+    save_kc_hit_for_aggregation,
+)
 from tokens import Canarytoken
 
 log = Logger()
@@ -44,54 +48,54 @@ class mTLS(basic.LineReceiver):
     def send_response(self):
         client = self.transport.getPeer()
 
-        req_uri = self.lines[0].split(" ")[1]
+        req_uri = self.lines[0].split(' ')[1]
 
-        headers = {l.split(":")[0]: l.split(":")[1].strip() for l in self.lines[2:-1]}
-        user_agent = headers.get("User-Agent", "Unknown")
+        headers = {l.split(':')[0]: l.split(':')[1].strip() for l in self.lines[2:-1]}
+        user_agent = headers.get('User-Agent', 'Unknown')
 
         try:
             peer_certificate = Certificate.peerFromTransport(self.transport)
             f = peer_certificate.digest()
-            self.sendLine("HTTP/1.1 401 Unauthorized")
+            self.sendLine('HTTP/1.1 401 Unauthorized')
             self.sendLine(self.headers())
-            self.sendLine("")
-            self.transport.write(json.dumps(self.bodies["unauthorized"]))
+            self.sendLine('')
+            self.transport.write(json.dumps(self.bodies['unauthorized']))
             self.transport.loseConnection()
 
             self.chirp(
                 {
-                    "f": f,
-                    "tf": f.replace(":", "")[:25].lower(),
-                    "ip": client.host,
-                    "useragent": user_agent,
-                    "location": req_uri.split("?")[0],
-                }
+                    'f': f,
+                    'tf': f.replace(':', '')[:25].lower(),
+                    'ip': client.host,
+                    'useragent': user_agent,
+                    'location': req_uri.split('?')[0],
+                },
             )
 
         except CertificateError as e:
-            log.error("CertificateError Exception: {}".format(e))
-            self.sendLine("HTTP/1.1 403 Forbidden")
+            log.error('CertificateError Exception: {}'.format(e))
+            self.sendLine('HTTP/1.1 403 Forbidden')
             self.sendLine(self.headers())
-            self.sendLine("")
-            response = self.bodies["forbidden"]
-            response["message"] = response["message"].format(req_uri.split("?")[0])
+            self.sendLine('')
+            response = self.bodies['forbidden']
+            response['message'] = response['message'].format(req_uri.split('?')[0])
             self.transport.write(json.dumps(response))
             self.transport.loseConnection()
         except Exception as e:
-            log.error("Exception send_response: {}".format(e))
-            self.sendLine("HTTP/1.1 400 Bad Request")
+            log.error('Exception send_response: {}'.format(e))
+            self.sendLine('HTTP/1.1 400 Bad Request')
             self.sendLine(self.headers())
-            self.sendLine("")
-            self.transport.write(json.dumps(self.bodies["bad"]))
+            self.sendLine('')
+            self.transport.write(json.dumps(self.bodies['bad']))
             self.transport.loseConnection()
 
         d = defer.Deferred()
-        d.callback("Success")
+        d.callback('Success')
         return d
 
     def chirp(self, trigger):
         try:
-            token = Canarytoken(value=trigger["tf"])
+            token = Canarytoken(value=trigger['tf'])
             self.canarydrop = Canarydrop(**get_canarydrop(canarytoken=token.value()))
 
             if self.enricher:
@@ -99,35 +103,35 @@ class mTLS(basic.LineReceiver):
             else:
                 self.factory.dispatch(
                     canarydrop=self.canarydrop,
-                    src_ip=trigger["ip"],
-                    useragent=trigger["useragent"],
-                    location=trigger["location"],
-                    additional_info=trigger["additional_info"],
+                    src_ip=trigger['ip'],
+                    useragent=trigger['useragent'],
+                    location=trigger['location'],
+                    additional_info=trigger['additional_info'],
                 )
 
         except (NoCanarytokenPresent, NoCanarytokenFound):
             log.warn(
-                "No token for {tf} | Cert: {f}".format(tf=trigger["tf"], f=trigger["f"])
+                'No token for {tf} | Cert: {f}'.format(tf=trigger['tf'], f=trigger['f']),
             )
         except Exception as e:
-            log.error("Exception in chirp: {}".format(e))
+            log.error('Exception in chirp: {}'.format(e))
 
     @staticmethod
     def generate_new_certificate(
-        ca_cert_path, username, is_ca_generation_request=False, ip=None
+        ca_cert_path, username, is_ca_generation_request=False, ip=None,
     ):
         try:
             if not is_ca_generation_request:
                 ca = get_certificate(ca_cert_path)
                 if not ca:
-                    log.warn("CA with key {} not found in redis".format(ca_cert_path))
+                    log.warn('CA with key {} not found in redis'.format(ca_cert_path))
                     return None
 
                 ca_key = load_privatekey(
-                    FILETYPE_PEM, base64.b64decode(ca.get("k").encode("ascii"))
+                    FILETYPE_PEM, base64.b64decode(ca.get('k').encode('ascii')),
                 )
                 cert_authority = load_certificate(
-                    FILETYPE_PEM, base64.b64decode(ca.get("c").encode("ascii"))
+                    FILETYPE_PEM, base64.b64decode(ca.get('c').encode('ascii')),
                 )
 
                 client_key = PKey()
@@ -140,41 +144,41 @@ class mTLS(basic.LineReceiver):
                 client_subj = x509.get_subject()
                 client_subj.commonName = username
 
-                ca_extension = X509Extension("basicConstraints", False, "CA:FALSE")
-                key_usage = X509Extension("keyUsage", True, "digitalSignature")
+                ca_extension = X509Extension('basicConstraints', False, 'CA:FALSE')
+                key_usage = X509Extension('keyUsage', True, 'digitalSignature')
 
-                if username == "kubernetes-apiserver":
+                if username == 'kubernetes-apiserver':
                     san_list = [
-                        "IP:{}".format(ip),
-                        "DNS:kubernetes",
-                        "DNS:kubernetes.default",
-                        "DNS:kubernetes.default.svc",
-                        "DNS:kubernetes.default.svc.cluster",
-                        "DNS:kubernetes.svc.cluster.local",
+                        'IP:{}'.format(ip),
+                        'DNS:kubernetes',
+                        'DNS:kubernetes.default',
+                        'DNS:kubernetes.default.svc',
+                        'DNS:kubernetes.default.svc.cluster',
+                        'DNS:kubernetes.svc.cluster.local',
                     ]
                     x509.add_extensions(
                         [
                             ca_extension,
                             X509Extension(
-                                "subjectKeyIdentifier", False, "hash", subject=x509
+                                'subjectKeyIdentifier', False, 'hash', subject=x509,
                             ),
-                            X509Extension("extendedKeyUsage", True, "clientAuth"),
+                            X509Extension('extendedKeyUsage', True, 'clientAuth'),
                             X509Extension(
-                                "subjectAltName", False, ", ".join(san_list).encode()
+                                'subjectAltName', False, ', '.join(san_list).encode(),
                             ),
                             key_usage,
-                        ]
+                        ],
                     )
                 else:
                     x509.add_extensions(
                         [
                             ca_extension,
                             X509Extension(
-                                "subjectKeyIdentifier", False, "hash", subject=x509
+                                'subjectKeyIdentifier', False, 'hash', subject=x509,
                             ),
-                            X509Extension("extendedKeyUsage", True, "clientAuth"),
+                            X509Extension('extendedKeyUsage', True, 'clientAuth'),
                             key_usage,
-                        ]
+                        ],
                     )
 
                 x509.set_issuer(cert_authority.get_subject())
@@ -182,7 +186,7 @@ class mTLS(basic.LineReceiver):
                 x509.gmtime_adj_notBefore(0)
                 # default certificate validity is 1 year
                 x509.gmtime_adj_notAfter(1 * 365 * 24 * 60 * 60 - 1)
-                x509.sign(ca_key, "sha256")
+                x509.sign(ca_key, 'sha256')
             else:
                 client_key = PKey()
                 client_key.generate_key(TYPE_RSA, 4096)
@@ -195,21 +199,21 @@ class mTLS(basic.LineReceiver):
                 client_subj.commonName = username
 
                 ca_extension = X509Extension(
-                    "basicConstraints", True, "CA:TRUE, pathlen:0"
+                    'basicConstraints', True, 'CA:TRUE, pathlen:0',
                 )
                 key_usage = X509Extension(
-                    "keyUsage", False, "cRLSign,digitalSignature,keyCertSign"
+                    'keyUsage', False, 'cRLSign,digitalSignature,keyCertSign',
                 )
 
                 x509.add_extensions(
                     [
                         ca_extension,
                         X509Extension(
-                            "subjectKeyIdentifier", False, "hash", subject=x509
+                            'subjectKeyIdentifier', False, 'hash', subject=x509,
                         ),
-                        X509Extension("extendedKeyUsage", True, "clientAuth"),
+                        X509Extension('extendedKeyUsage', True, 'clientAuth'),
                         key_usage,
-                    ]
+                    ],
                 )
 
                 x509.set_issuer(client_subj)
@@ -217,23 +221,23 @@ class mTLS(basic.LineReceiver):
                 x509.gmtime_adj_notBefore(0)
                 # default certificate validity is 1 year
                 x509.gmtime_adj_notAfter(1 * 365 * 24 * 60 * 60 - 1)
-                x509.sign(client_key, "sha256")
+                x509.sign(client_key, 'sha256')
 
             b64_cert = base64.b64encode(
-                dump_certificate(FILETYPE_PEM, x509).encode("ascii")
-            ).decode("ascii")
+                dump_certificate(FILETYPE_PEM, x509).encode('ascii'),
+            ).decode('ascii')
             b64_key = base64.b64encode(
-                dump_privatekey(FILETYPE_PEM, client_key).encode("ascii")
-            ).decode("ascii")
+                dump_privatekey(FILETYPE_PEM, client_key).encode('ascii'),
+            ).decode('ascii')
 
             return {
-                "f": mTLS._get_digest(dump_certificate(FILETYPE_PEM, x509)),
-                "c": b64_cert,
-                "k": b64_key,
+                'f': mTLS._get_digest(dump_certificate(FILETYPE_PEM, x509)),
+                'c': b64_cert,
+                'k': b64_key,
             }
 
         except Exception as e:
-            print("Exception: {}".format(e))
+            print('Exception: {}'.format(e))
             return None
 
     @staticmethod
@@ -248,14 +252,14 @@ class mTLSFactory(Factory, InputChannel):
     protocol = mTLS
 
     def __init__(
-        self, headers, bodies, ca_cert_path, channel_name=None, enricher=None, *a, **kw
+        self, headers, bodies, ca_cert_path, channel_name=None, enricher=None, *a, **kw,
     ):
         self.headers = headers
         self.bodies = bodies
         self.client_ca_cert_path = ca_cert_path
         self.enricher = enricher
 
-        self.switchboard = kw.pop("switchboard")
+        self.switchboard = kw.pop('switchboard')
         InputChannel.__init__(
             self,
             switchboard=self.switchboard,
@@ -274,20 +278,20 @@ class mTLSFactory(Factory, InputChannel):
 
 
 class ChannelKubeConfig:
-    def __init__(self, ip="127.0.0.1", port=6443, switchboard=None):
+    def __init__(self, ip='127.0.0.1', port=6443, switchboard=None):
         import kubeconfig
 
         self.client_ca_cert_path = kubeconfig.ClientCA
-        self.server_cert_path = "kubeconfig_server"
+        self.server_cert_path = 'kubeconfig_server'
         self.port = port
         self.ip = ip
-        self.channel_name = "Kubeconfig"
+        self.channel_name = 'Kubeconfig'
 
-        server_endpoint = "%s:%s" % (ip, port)
+        server_endpoint = '%s:%s' % (ip, port)
         save_kc_endpoint(server_endpoint)
 
         kc = kubeconfig.KubeConfig(
-            ca_cert_path=self.client_ca_cert_path, server_endpoint=server_endpoint
+            ca_cert_path=self.client_ca_cert_path, server_endpoint=server_endpoint,
         )
         factory = mTLSFactory(
             headers=kc.kc_headers,
@@ -301,72 +305,72 @@ class ChannelKubeConfig:
         self.service = SSLServer(port, factory, self._get_ssl_context())
 
     def add_intelligence(self, trigger, canarydrop=None, dispatcher=None):
-        trigger["dispatch"] = False
-        aggregation_key = "{}:{}".format(trigger["tf"], trigger["ip"])
+        trigger['dispatch'] = False
+        aggregation_key = '{}:{}'.format(trigger['tf'], trigger['ip'])
 
         _hits = get_kc_hits(aggregation_key)
-        hits = {} if not _hits[0] else json.loads(_hits[0]["hits"])
-        path = trigger["location"]
+        hits = {} if not _hits[0] else json.loads(_hits[0]['hits'])
+        path = trigger['location']
         offset = int(round(time() * 1000))
 
         if not hits or path not in hits:
-            hits[path] = {"count": 1, "first_seen": offset}
+            hits[path] = {'count': 1, 'first_seen': offset}
             save_kc_hit_for_aggregation(
-                aggregation_key, json.dumps(hits), update=(not hits)
+                aggregation_key, json.dumps(hits), update=(not hits),
             )
         else:
-            hits[path]["count"] += 1
+            hits[path]['count'] += 1
             save_kc_hit_for_aggregation(aggregation_key, json.dumps(hits), update=True)
 
-        hit_count = int(hits[path]["count"])
-        observation_time = offset - int(hits[path]["first_seen"])
-        unit_string = "seconds" if observation_time / 1000.0 > 1 else "second"
+        hit_count = int(hits[path]['count'])
+        observation_time = offset - int(hits[path]['first_seen'])
+        unit_string = 'seconds' if observation_time / 1000.0 > 1 else 'second'
         request_count = (
-            "{} in the last ~{} {}".format(
-                hit_count, int(ceil(observation_time / 1000.0)), unit_string
+            '{} in the last ~{} {}'.format(
+                hit_count, int(ceil(observation_time / 1000.0)), unit_string,
             )
             if observation_time > 0
             else str(hit_count)
         )
 
-        trigger_explanation = {"Request path": [path], "Request count": [request_count]}
+        trigger_explanation = {'Request path': [path], 'Request count': [request_count]}
 
-        trigger["additional_info"] = {"Trigger Information": trigger_explanation}
+        trigger['additional_info'] = {'Trigger Information': trigger_explanation}
 
-        if "kubectl" in trigger["useragent"]:
-            if path == "/api" and "/api" in hits and hit_count % 5 == 0:
+        if 'kubectl' in trigger['useragent']:
+            if path == '/api' and '/api' in hits and hit_count % 5 == 0:
                 kubectl_runs = hit_count / 5
-                trigger_explanation["Note"] = [
-                    "Caching discovery request: kubectl sends out 5 requests to the '/api' endpoint asking for information on supported API versions and endpoints - which is then cached for future requests."
+                trigger_explanation['Note'] = [
+                    "Caching discovery request: kubectl sends out 5 requests to the '/api' endpoint asking for information on supported API versions and endpoints - which is then cached for future requests.",
                 ]
-                trigger_explanation["Request count"][0] = "{} ({} kubectl {})".format(
-                    trigger_explanation["Request count"][0],
+                trigger_explanation['Request count'][0] = '{} ({} kubectl {})'.format(
+                    trigger_explanation['Request count'][0],
                     kubectl_runs,
-                    "run" if kubectl_runs == 1 else "runs",
+                    'run' if kubectl_runs == 1 else 'runs',
                 )
 
-                trigger["dispatch"] = True
+                trigger['dispatch'] = True
         else:
-            note = ""
-            if "curl" in trigger["useragent"]:
-                note = "Triggered by cURL: this request succeeded in triggering the token because the authentication material in the kubeconfig token was included with the request by using the --cacert, --key and --cert flags of cURL"
+            note = ''
+            if 'curl' in trigger['useragent']:
+                note = 'Triggered by cURL: this request succeeded in triggering the token because the authentication material in the kubeconfig token was included with the request by using the --cacert, --key and --cert flags of cURL'
 
-            if path in ["/healthz", "/livez", "/readyz"]:
-                note = "{}\n\n{}".format(
+            if path in ['/healthz', '/livez', '/readyz']:
+                note = '{}\n\n{}'.format(
                     note,
-                    "The Kubernetes API server provides 3 API endpoints - /healthz, /livez & /readyz that can be queried to obtain its current status.",
+                    'The Kubernetes API server provides 3 API endpoints - /healthz, /livez & /readyz that can be queried to obtain its current status.',
                 )
 
-            trigger_explanation["Note"] = [note]
-            trigger["dispatch"] = True
+            trigger_explanation['Note'] = [note]
+            trigger['dispatch'] = True
 
-        if trigger["dispatch"]:
+        if trigger['dispatch']:
             dispatcher(
                 canarydrop=canarydrop,
-                src_ip=trigger["ip"],
-                useragent=trigger["useragent"],
+                src_ip=trigger['ip'],
+                useragent=trigger['useragent'],
                 location=path,
-                additional_info=trigger["additional_info"],
+                additional_info=trigger['additional_info'],
             )
 
     def _get_ssl_context(self):
@@ -377,21 +381,21 @@ class ChannelKubeConfig:
                 ca = mTLS.generate_new_certificate(
                     is_ca_generation_request=True,
                     ca_cert_path=self.client_ca_cert_path,
-                    username="kubernetes-ca",
+                    username='kubernetes-ca',
                 )
                 if ca is not None:
                     save_certificate(self.client_ca_cert_path, ca)
                     client_ca = ca
             except Exception as e:
-                log.error("Exception: {}".format(e))
+                log.error('Exception: {}'.format(e))
                 raise e
 
-        client_ca_pem = "{}\n{}".format(
-            base64.b64decode(client_ca.get("c")), base64.b64decode(client_ca.get("k"))
+        client_ca_pem = '{}\n{}'.format(
+            base64.b64decode(client_ca.get('c')), base64.b64decode(client_ca.get('k')),
         )
         certificate_authority = Certificate.loadPEM(client_ca_pem)
 
-        self.server_ca_cert_path = self.server_cert_path + "_ca"
+        self.server_ca_cert_path = self.server_cert_path + '_ca'
         server_cert = get_certificate(self.server_cert_path)
         server_cert_ca = get_certificate(self.server_ca_cert_path)
         if not server_cert:
@@ -400,14 +404,14 @@ class ChannelKubeConfig:
                     ca = mTLS.generate_new_certificate(
                         is_ca_generation_request=True,
                         ca_cert_path=self.server_ca_cert_path,
-                        username="kubernetes-apiserver",
+                        username='kubernetes-apiserver',
                     )
                     if ca is not None:
                         save_certificate(self.server_ca_cert_path, ca)
 
                 _server_cert = mTLS.generate_new_certificate(
                     ca_cert_path=self.server_ca_cert_path,
-                    username="kubernetes-apiserver",
+                    username='kubernetes-apiserver',
                     ip=self.ip,
                 )
 
@@ -416,18 +420,18 @@ class ChannelKubeConfig:
                     server_cert = _server_cert
                 else:
                     raise Exception(
-                        "Server Certificate generation failed. Cert:{}".format(
-                            _server_cert
-                        )
+                        'Server Certificate generation failed. Cert:{}'.format(
+                            _server_cert,
+                        ),
                     )
 
             except Exception as e:
-                log.error("Exception: {}".format(e))
+                log.error('Exception: {}'.format(e))
                 raise e
 
-        server_cert_pem = "{}\n{}".format(
-            base64.b64decode(server_cert.get("c")),
-            base64.b64decode(server_cert.get("k")),
+        server_cert_pem = '{}\n{}'.format(
+            base64.b64decode(server_cert.get('c')),
+            base64.b64decode(server_cert.get('k')),
         )
         server_cert = PrivateCertificate.loadPEM(server_cert_pem)
 

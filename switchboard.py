@@ -16,7 +16,7 @@ class Switchboard(object):
         """Return a new Switchboard instance."""
         self.input_channels = {}
         self.output_channels = {}
-        log.info("Canarytokens switchboard started")
+        log.info('Canarytokens switchboard started')
 
     def add_input_channel(self, name=None, channel=None):
         """Register a new input channel with the switchboard.
@@ -64,9 +64,9 @@ class Switchboard(object):
 
             if not canarydrop.alertable():
                 log.warn(
-                    "Token {token} is not alertable at this stage.".format(
-                        token=canarydrop.canarytoken.value()
-                    )
+                    'Token {token} is not alertable at this stage.'.format(
+                        token=canarydrop.canarytoken.value(),
+                    ),
                 )
                 return
 
@@ -79,9 +79,9 @@ class Switchboard(object):
                     output_channel.send_alert(
                         canarydrop=canarydrop,
                         input_channel=self.input_channels[input_channel],
-                        **kwargs
+                        **kwargs,
                     )
                 except KeyError as e:
-                    raise Exception("Error sending alert: {err}".format(err=e.message))
+                    raise Exception('Error sending alert: {err}'.format(err=e.message))
         except Exception as e:
-            log.error("Exception occurred in switchboard dispatch: {err}".format(err=e))
+            log.error('Exception occurred in switchboard dispatch: {err}'.format(err=e))

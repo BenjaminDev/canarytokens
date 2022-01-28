@@ -15,7 +15,7 @@ class ChannelWireGuard(InputChannel):
         self.service = internet.UDPServer(port, wg.WireGuardProtocol(channel=self))
 
     def dispatch(self, **kwargs):
-        canarytoken = kwargs.pop("canarytoken")
+        canarytoken = kwargs.pop('canarytoken')
         # TODO: If canarydrop no longer exists, delete key -> canarytoken mapping in WireGuard keymap
-        kwargs["canarydrop"] = Canarydrop(**queries.get_canarydrop(canarytoken))
+        kwargs['canarydrop'] = Canarydrop(**queries.get_canarydrop(canarytoken))
         InputChannel.dispatch(self, **kwargs)

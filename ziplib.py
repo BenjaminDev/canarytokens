@@ -7,9 +7,9 @@ from zipfile import ZipFile, ZipInfo
 
 def printzip(zip):
     print(
-        "\t{extattr:b}\t{extattr:02x}\t{intattr:b}\t-\t{name}".format(
-            extattr=zip.external_attr, intattr=zip.internal_attr, name=zip.filename
-        )
+        '\t{extattr:b}\t{extattr:02x}\t{intattr:b}\t-\t{name}'.format(
+            extattr=zip.external_attr, intattr=zip.internal_attr, name=zip.filename,
+        ),
     )
 
 
@@ -21,19 +21,19 @@ MODE_ARCHIVE = 0x20
 MODE_FILE = 0x80
 
 
-def make_canary_desktop_ini(hostname=None, dummyfile="resource.dll"):
+def make_canary_desktop_ini(hostname=None, dummyfile='resource.dll'):
     return (
-        "\r\n[.ShellClassInfo]\r\nIconResource=\\\\%USERNAME%.%COMPUTERNAME%.%USERDOMAIN%.INI."
+        '\r\n[.ShellClassInfo]\r\nIconResource=\\\\%USERNAME%.%COMPUTERNAME%.%USERDOMAIN%.INI.'
         + str(hostname)
-        + str("\\" + dummyfile + "\r\n")
-    ).encode("utf16")
+        + str('\\' + dummyfile + '\r\n')
+    ).encode('utf16')
 
 
 def make_dir_entry(name=None, date_time=None, mode=MODE_DIRECTORY):
     tt = date_time.timetuple()
     dir = ZipInfo()
 
-    dir.filename = name + ("/" if name[-1] != "/" else "")
+    dir.filename = name + ('/' if name[-1] != '/' else '')
     dir.orig_filename = dir.filename
     dir.date_time = date_time.isocalendar() + (tt.tm_hour, tt.tm_min, tt.tm_sec)
     dir.compress_type = 0
@@ -63,7 +63,7 @@ def make_file_entry(name=None, date_time=None, mode=MODE_FILE | MODE_ARCHIVE):
 
 
 def create_zip(name=None):
-    return ZipFile(name, "w")
+    return ZipFile(name, 'w')
 
 
 def write_file(
@@ -74,7 +74,7 @@ def write_file(
     readonly=False,
     archive=True,
     date_time=datetime.datetime.utcnow(),
-    contents="",
+    contents='',
 ):
     mode = MODE_FILE
     mode |= MODE_HIDDEN if hidden else 0
@@ -100,7 +100,7 @@ def write_dir(
     mode |= MODE_READONLY if readonly else 0
     mode |= MODE_ARCHIVE if archive else 0
     entry = make_dir_entry(name=name, mode=mode, date_time=date_time)
-    zip.writestr(entry, "")
+    zip.writestr(entry, '')
 
 
 def write_weird(
@@ -113,7 +113,7 @@ def write_weird(
     directory=False,
     date_time=datetime.datetime.utcnow(),
     file=False,
-    contents="",
+    contents='',
 ):
     mode = 0
     mode |= MODE_HIDDEN if hidden else 0
@@ -129,10 +129,10 @@ def write_weird(
 def make_canary_zip(hostname=None):
     (fd, fname) = tempfile.mkstemp()
     archive = create_zip(name=fname)
-    write_dir(zip=archive, name="My Documents/", system=True)
+    write_dir(zip=archive, name='My Documents/', system=True)
     write_file(
         zip=archive,
-        name="My Documents/desktop.ini",
+        name='My Documents/desktop.ini',
         contents=make_canary_desktop_ini(hostname=hostname),
         system=True,
         hidden=True,
@@ -140,31 +140,31 @@ def make_canary_zip(hostname=None):
     archive.close()
     close(fd)
 
-    with open(fname, "r") as f:
+    with open(fname, 'r') as f:
         contents = f.read()
     unlink(fname)
 
     return contents
 
 
-if __name__ == "__main__":
-    archive = create_zip(name="test1.zip")
-    write_dir(zip=archive, name="test")
-    write_dir(zip=archive, name="test/normal-dir")
-    write_file(zip=archive, name="test/normal-dir/file1.txt", contents="hello!")
-    write_dir(zip=archive, name="test/sysdir")
+if __name__ == '__main__':
+    archive = create_zip(name='test1.zip')
+    write_dir(zip=archive, name='test')
+    write_dir(zip=archive, name='test/normal-dir')
+    write_file(zip=archive, name='test/normal-dir/file1.txt', contents='hello!')
+    write_dir(zip=archive, name='test/sysdir')
     write_file(
         zip=archive,
-        name="test/sysdir/file1.txt",
-        contents="i am system!",
+        name='test/sysdir/file1.txt',
+        contents='i am system!',
         system=True,
         hidden=True,
     )
-    write_dir(zip=archive, name="test/weirddir/")
+    write_dir(zip=archive, name='test/weirddir/')
     write_weird(
         zip=archive,
-        name="test/weirddir/file2.txt",
-        contents="i am weird!",
+        name='test/weirddir/file2.txt',
+        contents='i am weird!',
         system=True,
         hidden=True,
         archive=True,
@@ -174,8 +174,8 @@ if __name__ == "__main__":
     )
     write_weird(
         zip=archive,
-        name="test/weirddir/file2.txt/fooo.txt",
-        contents="i am weird 2!",
+        name='test/weirddir/file2.txt/fooo.txt',
+        contents='i am weird 2!',
         system=True,
         hidden=True,
         archive=True,
@@ -185,12 +185,12 @@ if __name__ == "__main__":
     )
     archive.close()
 
-    archive = create_zip(name="test1.zip")
-    write_dir(zip=archive, name="test/", system=True)
+    archive = create_zip(name='test1.zip')
+    write_dir(zip=archive, name='test/', system=True)
     write_file(
         zip=archive,
-        name="test/desktop.ini",
-        contents=make_canary_desktop_ini(hostname="xxxx5.canarydrops.net"),
+        name='test/desktop.ini',
+        contents=make_canary_desktop_ini(hostname='xxxx5.canarydrops.net'),
         system=True,
         hidden=True,
     )

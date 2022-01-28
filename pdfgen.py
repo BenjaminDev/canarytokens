@@ -13,7 +13,7 @@ STREAM_OFFSET = settings.CANARY_PDF_TEMPLATE_OFFSET
 def _substitute_stream(
     header=None,
     stream=None,
-    search="abcdefghijklmnopqrstuvwxyz.zyxwvutsrqponmlkjihgfedcba.aceegikmoqsuwy.bdfhjlnprtvxz",
+    search='abcdefghijklmnopqrstuvwxyz.zyxwvutsrqponmlkjihgfedcba.aceegikmoqsuwy.bdfhjlnprtvxz',
     replace=None,
 ):
     # Ohhhh, this is nasty. Instead of trying to get the xref positions right,
@@ -23,9 +23,9 @@ def _substitute_stream(
     candidate_stream = zlib.compress(zlib.decompress(stream).replace(search, replace))
     count = 1
     while len(candidate_stream) < old_len and count < 1000:
-        padding = "".join([chr(random.randrange(65, 90)) for x in range(0, count)])
+        padding = ''.join([chr(random.randrange(65, 90)) for x in range(0, count)])
         candidate_stream = zlib.compress(
-            zlib.decompress(stream).replace(search, replace + "/" + padding)
+            zlib.decompress(stream).replace(search, replace + '/' + padding),
         )
         count += 1
 
@@ -33,28 +33,28 @@ def _substitute_stream(
     # header = re.sub(r'Length [0-9]+', 'Length {len}'.format(len=len(new_stream)), header)
     if old_len != len(candidate_stream):
         raise Exception(
-            "Dammit, new PDF is too big ({new_len} > {old_len})".format(
-                new_len=len(candidate_stream), old_len=old_len
-            )
+            'Dammit, new PDF is too big ({new_len} > {old_len})'.format(
+                new_len=len(candidate_stream), old_len=old_len,
+            ),
         )
 
     return (header, candidate_stream)
 
 
 def make_canary_pdf(hostname=None):
-    f = open(PDF_FILE, "r")
+    f = open(PDF_FILE, 'r')
     contents = f.read()
     f.close()
 
     stream_size = int(
-        re.match(r".*\/Length ([0-9]+)\/.*", contents[STREAM_OFFSET:]).group(1)
+        re.match(r'.*\/Length ([0-9]+)\/.*', contents[STREAM_OFFSET:]).group(1),
     )
-    stream_start = STREAM_OFFSET + contents[STREAM_OFFSET:].index("stream\r\n") + 8
+    stream_start = STREAM_OFFSET + contents[STREAM_OFFSET:].index('stream\r\n') + 8
     stream_header = contents[STREAM_OFFSET:stream_start]
     stream = contents[stream_start : stream_start + stream_size]
 
     (stream_header, stream) = _substitute_stream(
-        header=stream_header, stream=stream, replace=hostname
+        header=stream_header, stream=stream, replace=hostname,
     )
 
     output = StringIO()

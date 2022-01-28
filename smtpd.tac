@@ -13,17 +13,17 @@ class CanaryMessageDelivery:
     implements(smtp.IMessageDelivery)
 
     def __init__(self):
-        print 'Created CanaryMessageDelivery()'
+        print ('Created CanaryMessageDelivery()')
 
     def receivedHeader(self, helo, origin, recipients):
-        return "Received: CanaryMessageDelivery"
+        return 'Received: CanaryMessageDelivery'
 
     def validateFrom(self, helo, origin):
         return origin
 
     def validateTo(self, user):
         # Only messages directed to the "console" user are accepted.
-        if user.dest.local == "console":
+        if user.dest.local == 'console':
             return lambda: CanaryMessage()
         raise smtp.SMTPBadRcpt(user)
 
@@ -70,14 +70,14 @@ class CanaryMessage:
                 self.stored_byte_count ++ len(line)
 
     def eomReceived(self):
-        print "New message received:"
-        print "\n".join(self.headers)
-        print "\n".join(self.links)
-        print '\n\n'.join([ '\n'.join(x) for x in self.attachments])
+        print ('New message received:')
+        print ('\n'.join(self.headers))
+        print ('\n'.join(self.links))
+        print ('\n\n'.join([ '\n'.join(x) for x in self.attachments]))
         self.lines = None
         #return defer.succeed(None)
         d = defer.Deferred()
-        d.callback("Success")
+        d.callback('Success')
         return d
 
     def connectionLost(self):
@@ -89,21 +89,21 @@ class CanaryESMTP(smtp.ESMTP):
     def __init__(self, **kwargs):
         smtp.ESMTP.__init__(self, **kwargs)
 
-    def greeting(self,):
+    def greeting(self):
         try:
             return self.factory.responses['greeting']
         except KeyError:
             return smtp.ESMTP.greeting(self)
 
     def receivedHeader(self, helo, origin, recipients):
-        return "Received: CanaryMessageDelivery"
+        return 'Received: CanaryMessageDelivery'
 
     def validateFrom(self, helo, origin):
         return origin
 
     def validateTo(self, user):
         # Only messages directed to the "console" user are accepted.
-        if user.dest.local == "console":
+        if user.dest.local == 'console':
             return lambda: CanaryMessage()
         raise smtp.SMTPBadRcpt(user)
 
@@ -115,7 +115,7 @@ class CanarySMTPFactory(smtp.SMTPFactory):
         self.responses = kw.pop('responses')
         smtp.SMTPFactory.__init__(self, *a, **kw)
 #        self.delivery = CanaryMessageDelivery()
-    
+
 
     def buildProtocol(self, addr):
         p = smtp.SMTPFactory.buildProtocol(self, addr)
@@ -138,17 +138,17 @@ class SimpleRealm:
 
 def main():
     from twisted.application import internet
-    from twisted.application import service    
-    
+    from twisted.application import service
+
     portal = Portal(SimpleRealm())
 #    checker = InMemoryUsernamePasswordDatabaseDontUse()
 #    checker.addUser("guest", "password")
 #    portal.registerChecker(checker)
-    
+
     responses = {'data_success': 'Finished', 'greeting': 'Hello there'}
-    a = service.Application("Canary SMTP Server")
+    a = service.Application('Canary SMTP Server')
     internet.TCPServer(2500, CanarySMTPFactory(portal, responses=responses)).setServiceParent(a)
-    
+
     return a
 
 application = main()

@@ -170,5 +170,3 @@ SELECT CONVERT(char(15), CONNECTIONPROPERTY('client_net_address'))
 
 --approach to finding failed logins:
 --http://blogs.technet.com/b/sql_server_isv/archive/2011/03/07/adding-failed-sql-server-logon-support-to-a-plm-sql-server.aspx
-
-

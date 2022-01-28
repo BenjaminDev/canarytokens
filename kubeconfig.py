@@ -10,11 +10,11 @@ import settings
 from channel_input_mtls import mTLS
 from queries import get_certificate, get_kc_endpoint
 
-UnauthorizedResponseBody = {"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"Unauthorized","reason":"Unauthorized","code":401}
-BadRequestResponseBody = {"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"Bad Request","reason":"Bad Request","code":400}
-ForbiddenResponseBody = {"kind": "Status","apiVersion": "v1","metadata":{},"status": "Failure","message":"forbidden: User \"system:anonymous\" cannot get path \"{}\"","reason": "Forbidden","details": {},"code": 403}
+UnauthorizedResponseBody = {'kind':'Status','apiVersion':'v1','metadata':{},'status':'Failure','message':'Unauthorized','reason':'Unauthorized','code':401}
+BadRequestResponseBody = {'kind':'Status','apiVersion':'v1','metadata':{},'status':'Failure','message':'Bad Request','reason':'Bad Request','code':400}
+ForbiddenResponseBody = {'kind': 'Status','apiVersion': 'v1','metadata':{},'status': 'Failure','message':"forbidden: User \"system:anonymous\" cannot get path \"{}\"",'reason': 'Forbidden','details': {},'code': 403}
 
-ClientCA = "kubeconfig_client_ca"
+ClientCA = 'kubeconfig_client_ca'
 
 log = Logger()
 
@@ -28,19 +28,19 @@ class KubeConfig():
 
     def kc_headers(self):
         import uuid
-        Headers = "cache-control: no-cache, private\r\ncontent-type: application/json\r\nx-content-type-options: nosniff\r\nx-kubernetes-pf-flowschema-uid: %s\r\nx-kubernetes-pf-prioritylevel-uid: %s\r\n"
+        Headers = 'cache-control: no-cache, private\r\ncontent-type: application/json\r\nx-content-type-options: nosniff\r\nx-kubernetes-pf-flowschema-uid: %s\r\nx-kubernetes-pf-prioritylevel-uid: %s\r\n'
         flow_schema_uid = str(uuid.uuid4())
         priority_level_uid = str(uuid.uuid4())
         return Headers % (flow_schema_uid, priority_level_uid)
 
     def _get_random_username(self):
-        k = ["kubernetes", "k8s", "kube", "k", "cluster"]
-        t = ["infra", "sre", "devops", "iac", "cloud", "dev", "prod", "cicd"]
-        r = ["admin", "user", "superuser", "root"]
-        d = ["-", "_", ":"]
+        k = ['kubernetes', 'k8s', 'kube', 'k', 'cluster']
+        t = ['infra', 'sre', 'devops', 'iac', 'cloud', 'dev', 'prod', 'cicd']
+        r = ['admin', 'user', 'superuser', 'root']
+        d = ['-', '_', ':']
 
         _d = d[random.randint(0,len(d)-1)]
-        return "%s%s%s%s%s" % (k[random.randint(0,len(k)-1)], _d, t[random.randint(0,len(t))-1], _d, r[random.randint(0,len(r)-1)])
+        return '%s%s%s%s%s' % (k[random.randint(0,len(k)-1)], _d, t[random.randint(0,len(t))-1], _d, r[random.randint(0,len(r)-1)])
 
     def get_kubeconfig(self):
         try:
@@ -56,18 +56,18 @@ class KubeConfig():
 
             _ca_data = get_certificate(self.ca_cert_path)
             if not _ca_data:
-                print "Client CA was not found, kubeconfig generation failed"
+                print ('Client CA was not found, kubeconfig generation failed')
                 return None
 
             ca_data = _ca_data.get('c')
 
             # username can be randomly generated here
             username = self._get_random_username()
-            cluster_name = "k8s-prod-cluster"
+            cluster_name = 'k8s-prod-cluster'
 
             client_auth = mTLS.generate_new_certificate(ca_cert_path=self.ca_cert_path, username=username)
 
-            cluster_endpoint = "https://%s" % self.server_endpoint
+            cluster_endpoint = 'https://%s' % self.server_endpoint
 
             kc['clusters'][0]['cluster']['certificate-authority-data'] = ca_data.encode('utf-8')
             kc['clusters'][0]['cluster']['server'] = cluster_endpoint
@@ -79,17 +79,17 @@ class KubeConfig():
 
             kc['contexts'][0]['context']['cluster'] = cluster_name
             kc['contexts'][0]['context']['user'] = username
-            kc['contexts'][0]['name'] = "%s-%s" % (username, cluster_name)
+            kc['contexts'][0]['name'] = '%s-%s' % (username, cluster_name)
 
-            kc['current-context'] = "%s-%s" % (username, cluster_name)
+            kc['current-context'] = '%s-%s' % (username, cluster_name)
 
             # Custom representer to make OrderDict parseable by pyyaml
             preserve_order = lambda self, data:  self.represent_mapping('tag:yaml.org,2002:map', data.items())
             yaml.add_representer(OrderedDict, preserve_order)
             # 0: Truncated cert fingerprint, 1: b64 encoded kubeconfig
-            return (client_auth["f"].replace(":","")[:25].lower(), base64.b64encode(yaml.dump(kc, None, default_flow_style=False, sort_keys=False)))
+            return (client_auth['f'].replace(':','')[:25].lower(), base64.b64encode(yaml.dump(kc, None, default_flow_style=False, sort_keys=False)))
         except Exception as e:
-            log.error(u"%s" % e)
+            log.error(u'%s' % e)
             return None
 
 def get_kubeconfig():

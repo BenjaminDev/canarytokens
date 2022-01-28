@@ -3,9 +3,9 @@ import sys
 
 settingsmodule = sys.modules[__name__]
 
-DEBUG = False
+DEBUG = True
 
-LISTEN_DOMAIN = ""
+LISTEN_DOMAIN = ''
 
 if DEBUG:
     CHANNEL_DNS_PORT = 5354
@@ -26,94 +26,94 @@ CHANNEL_BITCOIN_MIN_DELAY = 60 * 60
 
 CANARYTOKENS_HTTP_PORT = 8082
 
-CANARY_PDF_TEMPLATE = "templates/template.pdf"
+CANARY_PDF_TEMPLATE = 'templates/template.pdf'
 CANARY_PDF_TEMPLATE_OFFSET = 793
-CANARY_WORD_TEMPLATE = "templates/template.docx"
-CANARY_MYSQL_DUMP_TEMPLATE = "templates/mysql_tables.zip"
-CANARY_EXCEL_TEMPLATE = "templates/template.xlsx"
+CANARY_WORD_TEMPLATE = 'templates/template.docx'
+CANARY_MYSQL_DUMP_TEMPLATE = 'templates/mysql_tables.zip'
+CANARY_EXCEL_TEMPLATE = 'templates/template.xlsx'
 
-TOKEN_RETURN = "gif"  # could be gif, fortune
+TOKEN_RETURN = 'gif'  # could be gif, fortune
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 1
-WEB_IMAGE_UPLOAD_PATH = "/workspace/uploads"
+WEB_IMAGE_UPLOAD_PATH = '/workspace/uploads'
 
 for envvar in [
-    "SMTP_PORT",
-    "SMTP_USERNAME",
-    "SMTP_PASSWORD",
-    "SMTP_SERVER",
-    "AWSID_URL",
-    "MAILGUN_DOMAIN_NAME",
-    "MAILGUN_API_KEY",
-    "MAILGUN_BASE_URL",
-    "MANDRILL_API_KEY",
-    "SENDGRID_API_KEY",
-    "PUBLIC_IP",
-    "PUBLIC_DOMAIN",
-    "ALERT_EMAIL_FROM_ADDRESS",
-    "ALERT_EMAIL_FROM_DISPLAY",
-    "ALERT_EMAIL_SUBJECT",
-    "DOMAINS",
-    "NXDOMAINS",
-    "TOKEN_RETURN",
-    "MAX_UPLOAD_SIZE",
-    "WEB_IMAGE_UPLOAD_PATH",
-    "DEBUG",
-    "IPINFO_API_KEY",
-    "SWITCHBOARD_LOG_COUNT",
-    "SWITCHBOARD_LOG_SIZE",
-    "FRONTEND_LOG_COUNT",
-    "FRONTEND_LOG_SIZE",
-    "MAX_HISTORY",
-    "MAX_ALERTS_PER_MINUTE",
-    "WG_PRIVATE_KEY_SEED",
-    "WG_PRIVATE_KEY_N",
-    "AWSID_URL",
+    'SMTP_PORT',
+    'SMTP_USERNAME',
+    'SMTP_PASSWORD',
+    'SMTP_SERVER',
+    'AWSID_URL',
+    'MAILGUN_DOMAIN_NAME',
+    'MAILGUN_API_KEY',
+    'MAILGUN_BASE_URL',
+    'MANDRILL_API_KEY',
+    'SENDGRID_API_KEY',
+    'PUBLIC_IP',
+    'PUBLIC_DOMAIN',
+    'ALERT_EMAIL_FROM_ADDRESS',
+    'ALERT_EMAIL_FROM_DISPLAY',
+    'ALERT_EMAIL_SUBJECT',
+    'DOMAINS',
+    'NXDOMAINS',
+    'TOKEN_RETURN',
+    'MAX_UPLOAD_SIZE',
+    'WEB_IMAGE_UPLOAD_PATH',
+    'DEBUG',
+    'IPINFO_API_KEY',
+    'SWITCHBOARD_LOG_COUNT',
+    'SWITCHBOARD_LOG_SIZE',
+    'FRONTEND_LOG_COUNT',
+    'FRONTEND_LOG_SIZE',
+    'MAX_HISTORY',
+    'MAX_ALERTS_PER_MINUTE',
+    'WG_PRIVATE_KEY_SEED',
+    'WG_PRIVATE_KEY_N',
+    'AWSID_URL',
 ]:
     try:
-        setattr(settingsmodule, envvar, os.environ["CANARY_" + envvar])
+        setattr(settingsmodule, envvar, os.environ['CANARY_' + envvar])
     except KeyError:
         if not hasattr(settingsmodule, envvar):
-            setattr(settingsmodule, envvar, "")
+            setattr(settingsmodule, envvar, '')
 
-if getattr(settingsmodule, "AWSID_URL") == "":
+if getattr(settingsmodule, 'AWSID_URL') == '':
     setattr(
         settingsmodule,
-        "AWSID_URL",
-        "https://1luncdvp6l.execute-api.us-east-2.amazonaws.com/prod/CreateUserAPITokens",
+        'AWSID_URL',
+        'https://1luncdvp6l.execute-api.us-east-2.amazonaws.com/prod/CreateUserAPITokens',
     )
 
 if type(DEBUG) == str:
-    DEBUG = DEBUG == "True"
+    DEBUG = DEBUG == 'True'
 
-for envvar in ["DOMAINS", "NXDOMAINS", "GOOGLE_API_KEY"]:
+for envvar in ['DOMAINS', 'NXDOMAINS', 'GOOGLE_API_KEY']:
     try:
-        setattr(settingsmodule, envvar, os.environ["CANARY_" + envvar].split(","))
+        setattr(settingsmodule, envvar, os.environ['CANARY_' + envvar].split(','))
     except KeyError:
         setattr(settingsmodule, envvar, [])
 
 try:
-    setattr(settingsmodule, "LOG_FILE", os.environ["LOG_FILE"])
+    setattr(settingsmodule, 'LOG_FILE', os.environ['LOG_FILE'])
 except KeyError:
-    if not hasattr(settingsmodule, "LOG_FILE"):
-        setattr(settingsmodule, "LOG_FILE", [])
+    if not hasattr(settingsmodule, 'LOG_FILE'):
+        setattr(settingsmodule, 'LOG_FILE', [])
 
 try:
-    setattr(settingsmodule, "ERROR_LOG_WEBHOOK", os.environ["ERROR_LOG_WEBHOOK"])
+    setattr(settingsmodule, 'ERROR_LOG_WEBHOOK', os.environ['ERROR_LOG_WEBHOOK'])
 except KeyError:
     pass
     # Do not set this an an attribute if it is not in the config / os environ
 
 for log_config in [
-    "SWITCHBOARD_LOG_COUNT",
-    "SWITCHBOARD_LOG_SIZE",
-    "FRONTEND_LOG_COUNT",
-    "FRONTEND_LOG_SIZE",
+    'SWITCHBOARD_LOG_COUNT',
+    'SWITCHBOARD_LOG_SIZE',
+    'FRONTEND_LOG_COUNT',
+    'FRONTEND_LOG_SIZE',
 ]:
     val = getattr(settingsmodule, log_config)
-    if log_config.endswith("COUNT") and val == "":
+    if log_config.endswith('COUNT') and val == '':
         val = 5
-    elif log_config.endswith("SIZE") and val == "":
+    elif log_config.endswith('SIZE') and val == '':
         val = 5000000
 
     setattr(settingsmodule, log_config, int(val))
@@ -121,27 +121,29 @@ for log_config in [
 # Configure the maximum number of saved hits on any token. Default list size is 10
 try:
     setattr(
-        settingsmodule, "MAX_HISTORY", int(getattr(settingsmodule, "MAX_HISTORY")) - 1
+        settingsmodule, 'MAX_HISTORY', int(getattr(settingsmodule, 'MAX_HISTORY')) - 1,
     )
 except:
     setattr(
-        settingsmodule, "MAX_HISTORY", 9
+        settingsmodule, 'MAX_HISTORY', 9,
     )  # The off-by-one is intentional, due to Python slicing notation
 
 try:
-    setattr(settingsmodule, "PROTOCOL", os.environ["PROTOCOL"])
+    setattr(settingsmodule, 'PROTOCOL', os.environ['PROTOCOL'])
 except KeyError:
-    if not hasattr(settingsmodule, "PROTOCOL"):
-        setattr(settingsmodule, "PROTOCOL", "http")
+    if not hasattr(settingsmodule, 'PROTOCOL'):
+        setattr(settingsmodule, 'PROTOCOL', 'http')
 
 if WEB_IMAGE_UPLOAD_PATH and not os.path.exists(WEB_IMAGE_UPLOAD_PATH):
     os.mkdir(WEB_IMAGE_UPLOAD_PATH)
 
-REDIS_HOST = "redis"
+REDIS_HOST = 'redis'
 REDIS_PORT = 6379
-REDIS_DB = "0"
+REDIS_DB = '0'
 
 TWILIO_ENABLED = False
-TWILIO_FROM_NUMBER = ""
-TWILIO_ACCOUNT_SID = ""
-TWILIO_AUTH_TOKEN = ""
+TWILIO_FROM_NUMBER = ''
+TWILIO_ACCOUNT_SID = ''
+TWILIO_AUTH_TOKEN = ''
+
+WG_PRIVATE_KEY_SEED='asdads'
