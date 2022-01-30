@@ -1,3 +1,5 @@
+
+from __future__ import annotations
 from twisted.web.client import getPage
 import base64
 import datetime
@@ -8,9 +10,10 @@ import urllib.request
 import requests
 import simplejson
 from twisted.logger import Logger
+# from canarytokens.canarydrop import Canarydrop
 
-import settings
-from exception import LinkedInFailure
+# import settings
+# from exception import LinkedInFailure
 from canarytokens.redismanager import (
     KEY_BITCOIN_ACCOUNT, KEY_BITCOIN_ACCOUNTS,
     KEY_CANARY_DOMAINS, KEY_CANARY_GOOGLE_API_KEY,
@@ -28,14 +31,15 @@ from canarytokens.redismanager import (
 )
 
 log = Logger()
+from canarytokens import canarydrop as cand
 
-
-def get_canarydrop(canarytoken=None):
-    canarydrop = DB.get_db().get_db().hgetall(KEY_CANARYDROP + canarytoken)
+def get_canarydrop(canarytoken:str)->cand.Canarydrop:
+    canarydrop = DB.get_db().hgetall(KEY_CANARYDROP + canarytoken)
     if 'triggered_list' in list(canarydrop.keys()):
         canarydrop['triggered_list'] = simplejson.loads(
             canarydrop['triggered_list'])
-    return canarydrop
+    
+    return cand.Canarydrop(**canarydrop)
 
 
 def get_all_canary_sites():

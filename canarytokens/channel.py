@@ -3,12 +3,13 @@ Base class for all canarydrop channels.
 """
 
 import datetime
+from pydantic import BaseSettings
 
 import simplejson
 from twisted.logger import Logger
 
-import settings
-from exception import DuplicateChannel
+
+# from exception import DuplicateChannel
 
 log = Logger()
 
@@ -25,8 +26,9 @@ class Channel(object):
 class InputChannel(Channel):
     CHANNEL = 'InputChannel'
 
-    def __init__(self, switchboard=None, name=None, unique_channel=False):
+    def __init__(self, switchboard, name:str, settings:BaseSettings, unique_channel=False):
         super(InputChannel, self).__init__(switchboard=switchboard, name=name)
+        self.settings = settings
         try:
             self.register_input_channel()
         except DuplicateChannel as e:
@@ -43,14 +45,14 @@ class InputChannel(Channel):
 
     def format_webhook_canaryalert(
         self,
-        canarydrop=None,
-        protocol=settings.PROTOCOL,
-        host=settings.PUBLIC_DOMAIN,
+        canarydrop,
+        protocol,
+        host,
         **kwargs,
     ):
         payload = {}
         if not host or host == '':
-            host = settings.PUBLIC_IP
+            host = self.settings.PUBLIC_IP
 
         payload['channel'] = self.name
         payload['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S (UTC)')
@@ -69,15 +71,15 @@ class InputChannel(Channel):
 
     def format_slack_canaryalert(
         self,
-        canarydrop=None,
-        protocol=settings.PROTOCOL,
-        host=settings.PUBLIC_DOMAIN,
+        canarydrop,
+        protocol,
+        host,
         **kwargs,
     ):
         payload = {}
         fields = []
         if not host or host == '':
-            host = settings.PUBLIC_IP
+            host = self.settings.PUBLIC_IP
         manage_link = '{protocol}://{host}/manage?token={token}&auth={auth}'.format(
             protocol=protocol,
             host=host,
@@ -105,15 +107,15 @@ class InputChannel(Channel):
 
     def format_canaryalert(
         self,
-        canarydrop=None,
-        protocol=settings.PROTOCOL,
-        host=settings.PUBLIC_DOMAIN,
+        canarydrop,
+        protocol,
+        host,
         params=None,
         **kwargs,
     ):
         msg = {}
         if not host or host == '':
-            host = settings.PUBLIC_IP
+            host = self.settings.PUBLIC_IP
 
         if 'useragent' in kwargs:
             msg['useragent'] = kwargs['useragent']
@@ -186,11 +188,11 @@ Manage your settings for this Canarydrop:
             )
 
         if params.get('subject_required', False):
-            msg['subject'] = settings.ALERT_EMAIL_SUBJECT
+            msg['subject'] = self.settings.ALERT_EMAIL_SUBJECT
         if params.get('from_display_required', False):
-            msg['from_display'] = settings.ALERT_EMAIL_FROM_DISPLAY
+            msg['from_display'] = self.settings.ALERT_EMAIL_FROM_DISPLAY
         if params.get('from_address_required', False):
-            msg['from_address'] = settings.ALERT_EMAIL_FROM_ADDRESS
+            msg['from_address'] = self.settings.ALERT_EMAIL_FROM_ADDRESS
         return msg
 
     def dispatch(self, **kwargs):

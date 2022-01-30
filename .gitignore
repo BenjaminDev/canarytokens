@@ -5,3 +5,5 @@ tokensvenv/*
 *.pid
 .vscode
 .DS_Store
+.coverage
+old/*

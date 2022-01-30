@@ -1,6 +1,7 @@
 import redis
 from canarytokens.exceptions import RecreatingDBException
-import settings
+# import settings
+
 import os
 
 class DB:

@@ -1,8 +1,9 @@
 import email
 from secrets import token_bytes
+from typing import Optional
 from wsgiref.validate import validator
 from attr import validate
-from pydantic import BaseModel, EmailStr, HttpUrl
+from pydantic import BaseModel, EmailStr, HttpUrl, constr
 # from canarytokens.queries import is_webhook_valid
 from canarytokens.tokens import TokenTypes
 
@@ -46,3 +47,14 @@ class DNSTokenResponse(BaseModel):
     # "Url": "http://canarytokens.com/static/images/traffic/0nomj9kspdad3kpecqakf7ni8/submit.aspx",
     # "Error_Message": null,
     # "Email": "test@test.com", "Auth": "cee1c1693bd2b3ab0db1c4b9db40c7cf"}
+
+
+class User(BaseModel):
+    name: constr(max_length=30, strip_whitespace=True, to_lower=True)
+    email: Optional[EmailStr] = None
+    # alert_expiry -> attach this to a user or a token?
+    # alert_limit -> attach this to a user or a token?
+    # alert_count -> attach this to a user or a token?
+
+class Anonymous(User):
+    name: constr(max_length=30, strip_whitespace=True, to_lower=True) = "Anonymous"

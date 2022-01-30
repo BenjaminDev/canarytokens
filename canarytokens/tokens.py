@@ -1,8 +1,15 @@
+from __future__ import annotations
+from difflib import Match
+import math
 import random
 import re
 import enum
-from exception import NoCanarytokenFound
-
+from turtle import st
+from typing import AnyStr, Dict, Tuple
+# from canarytokens.canarydrop import Canarydrop
+# from exception import NoCanarytokenFound
+from canarytokens.queries import get_canarydrop
+from canarytokens.exceptions import NoCanarytokenFound
 
 class TokenTypes(enum.Enum):
     WEB = "web"
@@ -69,6 +76,51 @@ canarytoken_ALPHABET = [
 ]
 canarytoken_LENGTH = 25  # equivalent to 128-bit id
 
+# TODO: put these in a nicer place. Ensure re.compile is called only once at startup
+# add a naming convention for easy reading when seen in other files.
+sql_server_username = re.compile(
+    '([A-Za-z0-9.-]*)\.[0-9]{2}\.', re.IGNORECASE,
+)
+mysql_username = re.compile('([A-Za-z0-9.-]*)\.M[0-9]{3}\.', re.IGNORECASE)
+linux_inotify = re.compile('([A-Za-z0-9.-]*)\.L[0-9]{2}\.', re.IGNORECASE)
+generic = re.compile('([A-Za-z0-9.-]*)\.G[0-9]{2}\.', re.IGNORECASE)
+dtrace_process = re.compile(
+    '([0-9]+)\.([A-Za-z0-9-=]+)\.h\.([A-Za-z0-9.-=]+)\.c\.([A-Za-z0-9.-=]+)\.D1\.',
+    re.IGNORECASE,
+)
+dtrace_file_open = re.compile(
+    '([0-9]+)\.([A-Za-z0-9-=]+)\.h\.([A-Za-z0-9.-=]+)\.f\.([A-Za-z0-9.-=]+)\.D2\.',
+    re.IGNORECASE,
+)
+desktop_ini_browsing = re.compile(
+    '([^\.]+)\.([^\.]+)\.?([^\.]*)\.ini\.', re.IGNORECASE,
+)
+log4_shell = re.compile('([A-Za-z0-9.-]*)\.L4J\.', re.IGNORECASE)
+
+# TODO: we can do better than this.
+# ??
+source_data_extractors = {
+    "sql_server_username": sql_server_username,
+    "mysql_username": mysql_username,
+    "linux_inotify" : linux_inotify,
+    "generic" : generic,
+    "dtrace_process": dtrace_process,
+    "dtrace_file_open": dtrace_file_open,
+    "desktop_ini_browsing": desktop_ini_browsing,
+    "log4_shell": log4_shell,
+}
+
+
+
+def handle_query_name(query_name: str)-> Tuple[Canarydrop, Dict[str,str]]:
+    token = Canarytoken(value=query_name)
+
+    canarydrop = get_canarydrop(canarytoken=token.value())
+
+    src_data = Canarytoken.look_for_source_data(
+        token=token.value(), query_name=query_name
+    )
+    return canarydrop, src_data
 
 class Canarytoken(object):
     CANARY_RE = re.compile(
@@ -128,10 +180,135 @@ class Canarytoken(object):
     ):
         return self._value
 
-    # def __repr__(
-    #     self,
-    # ):
-    #     return '<Canarytoken - %s>' % self._value
+    @staticmethod
+    def look_for_source_data(query_name:str)->Dict[str,str]:
+        for soure_name, source_extractor in source_data_extractors.items():
+            if (m := source_extractor.match(query_name)) is not None:
+               return getattr(Canarytoken, f"_{soure_name}")(m)
+        else:
+            return {}
+    @staticmethod
+    def _sql_server_data(matches:Match[AnyStr]):
+        username = matches.group(1)
+        data = {}
+        # TODO: decoded base64 can contain all sorts of character
+        # we need to sanitise this as it's user input!!!
+        data['sql_username'] = base64.b64decode(
+            username.replace('.', '').replace('-', '='),
+        )
+        return data
+    @staticmethod
+    def _mysql_data(matches:Match[AnyStr]):
+        username = matches.group(1)
+        data = {}
+        # TODO: decoded base64 can contain all sorts of character
+        # we need to sanitise this as it's user input!!!
+        data['mysql_username'] = base64.b32decode(
+            username.replace('.', '').replace('-', '=').upper(),
+        )
+        return data
+    @staticmethod
+    def _linux_inotify_data(matches:Match[AnyStr])->Dict[str,str]:
+        data = {}
+        filename=matches.group(1)
+        filename = filename.replace('.', '').upper()
+        # this channel doesn't have padding, add if needed
+        filename += '=' * int((math.ceil(float(len(filename)) / 8) * 8 - len(filename)))
+        data['linux_inotify_filename_access'] = base64.b32decode(filename)
+        return data
+    @staticmethod
+    def _generic(matches:Match[AnyStr])->Dict[str,str]:
+        data = {}
+        generic_data=matches.group(1)
+        generic_data = generic_data.replace('.', '').upper()
+        # this channel doesn't have padding, add if needed
+        # TODO: put this padding logic into utils somewhere.
+        generic_data += '=' * int(
+            (math.ceil(float(len(generic_data)) / 8) * 8 - len(generic_data)),
+        )
+        try:
+            # TODO: this can smuggle in all sorts of data we need to sanitise
+            #
+            data['generic_data'] = base64.b32decode(generic_data)
+        except TypeError:
+            data['generic_data'] = 'Unrecoverable data: {}'.format(generic_data)
+        return data
+    @staticmethod
+    def _dtrace_process_data(matches:Match[AnyStr])->Dict[str,str]:
+        raise NotImplementedError("Please implement me! ")
+        # data = {}
+        # try:
+        #     data['dtrace_uid'] = base64.b64decode(uid)
+        # except:
+        #     log.error(
+        #         'Could not retrieve uid from dtrace '
+        #         + 'process alert: {uid}'.format(uid=uid),
+        #     )
+        # try:
+        #     data['dtrace_hostname'] = base64.b64decode(hostname.replace('.', ''))
+        # except:
+        #     log.error(
+        #         'Could not retrieve hostname from dtrace '
+        #         + 'process alert: {hostname}'.format(hostname=hostname),
+        #     )
+        # try:
+        #     data['dtrace_command'] = base64.b64decode(command.replace('.', ''))
+        # except:
+        #     log.error(
+        #         'Could not retrieve command from dtrace '
+        #         + 'process alert: {command}'.format(command=command),
+        #     )
+
+        # return data
+    @staticmethod
+    def _dtrace_file_open(matches:Match[AnyStr])->Dict[str,str]:
+        raise NotImplementedError("Please implement me")
+        # data = {}
+        # try:
+        #     data['dtrace_uid'] = base64.b64decode(uid)
+        # except:
+        #     log.error(
+        #         'Could not retrieve uid from dtrace '
+        #         + 'file open alert: {uid}'.format(uid=uid),
+        #     )
+
+        # try:
+        #     data['dtrace_hostname'] = base64.b64decode(hostname.replace('.', ''))
+        # except:
+        #     log.error(
+        #         'Could not retrieve hostname from dtrace '
+        #         + 'process alert: {hostname}'.format(hostname=hostname),
+        #     )
+        # try:
+        #     data['dtrace_filename'] = base64.b64decode(filename.replace('.', ''))
+        # except:
+        #     log.error(
+        #         'Could not retrieve filename from dtrace '
+        #         + 'file open alert: {filename}'.format(filename=filename),
+        #     )
+
+        # return data
+    @staticmethod
+    def _desktop_ini_browsing(matches:Match[AnyStr])->Dict[str,str]:
+        data = {}
+        username=matches.group(1)
+        hostname=matches.group(2)
+        domain=matches.group(3),
+
+        data['windows_desktopini_access_username'] = username
+        data['windows_desktopini_access_hostname'] = hostname
+        data['windows_desktopini_access_domain'] = domain
+        return data
+    @staticmethod
+    def _log4_shell(matches:Match[AnyStr])->Dict[str,str]:
+        data = {}
+        computer_name=matches.group(1)
+        if len(computer_name) <= 1:
+            computer_name = 'Not Obtained'
+        else:
+            computer_name = computer_name[1:]
+        data['log4_shell_computer_name'] = computer_name
+        return data
 
 
 # if __name__ == '__main__':

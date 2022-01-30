@@ -12,8 +12,8 @@ from twisted.internet import reactor
 from twisted.web.client import Agent
 from twisted.web.http_headers import Headers
 
-from channel import OutputChannel
-from constants import OUTPUT_CHANNEL_WEBHOOK
+from canarytokens.channel import OutputChannel
+from canarytokens.constants import OUTPUT_CHANNEL_WEBHOOK
 
 
 @implementer(IBodyProducer)

@@ -4,23 +4,25 @@ and records accounting information about the Canarytoken.
 
 Maps to the object stored in Redis.
 """
+from __future__ import annotations
 
 import base64
 import datetime
 import os
 import random
 from hashlib import md5
+from pydantic import BaseModel, EmailStr, constr
 
 import pyqrcode
 import simplejson
 
-import wireguard as wg
-from constants import (
+# import wireguard as wg
+from canarytokens.constants import (
     OUTPUT_CHANNEL_EMAIL,
     OUTPUT_CHANNEL_TWILIO_SMS,
     OUTPUT_CHANNEL_WEBHOOK,
 )
-from exception import NoCanarytokenPresent, NoUser, UnknownAttribute
+from canarytokens.exceptions import NoCanarytokenPresent, NoUser, UnknownAttribute
 from canarytokens.queries import (
     add_additional_info_to_hit,
     add_canarydrop_hit,
@@ -32,9 +34,19 @@ from canarytokens.queries import (
     get_canarydrop_triggered_list,
     load_user,
 )
+# from canarytokens.tokens import Canarytoken
+# from users import AnonymousUser, User
 from canarytokens.tokens import Canarytoken
-from users import AnonymousUser, User
+from canarytokens.models import Anonymous
 
+# class CanaryDropData(BaseModel):
+#     canarytoken: Canarytoken
+#     alert_email_enabled: bool
+#     alert_email_recipient: EmailStr
+#     alert_sms_enabled: bool = False
+#     alert_sms_recipient: constr(max_length=50, strip_whitespace=True) = None
+
+# class
 
 class Canarydrop(object):
     allowed_attrs = [
@@ -76,7 +88,7 @@ class Canarydrop(object):
         # TODO: use specified keyword arguments.
         for k, v in kwargs.items():
             if k not in self.allowed_attrs:
-                raise UnknownAttribute(attribute=k)
+                raise UnknownAttribute(f"Unknown attribute: {k}")
             self._drop[k] = v
 
         if "canarytoken" not in self._drop:
@@ -90,7 +102,7 @@ class Canarydrop(object):
             raise Exception("Missing imgur_token from canarytokens.canarydrop")
 
         if "user" not in self._drop or self._drop["user"] in ("None", "Anonymous"):
-            self._drop["user"] = AnonymousUser()
+            self._drop["user"] = Anonymous()
         else:
             self._drop["user"] = load_user(self._drop["user"])
             if not self._drop["user"]:
@@ -341,10 +353,17 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
     ):
         """Return a representation of this Canarydrop suitable for saving
         into redis."""
+        # TODO: rip out the _drop make this a dataclass or pydantic class
+        # DESIGN: this needs a re-work. defering until tests passing and coverage is high.
         serialized = self._drop.copy()
         serialized["type"] = str(serialized["type"])
+        for k, v in self._drop.items():
+            if isinstance(v,bool): 
+                serialized[k] = str(v)
+            if v is None: # HACK: will fix once _drop is gone.
+                serialized.pop(k, None)
         if serialized["user"]:
-            serialized["user"] = serialized["user"].username
+            serialized["user"] = serialized["user"].name
 
         if "triggered_list" in list(serialized.keys()):
             serialized["triggered_list"] = simplejson.dumps(
@@ -352,21 +371,21 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
             )
         for key in [
             # "type",
-            "alert_email_enabled",
-            "alert_email_recipient",
-            "alert_webhook_enabled",
-            "alert_webhook_url",
-            "canarytoken",
-            "memo",
-            "browser_scanner_enabled",
-            "timestamp",
-            "user",
-            "auth",
-            "alert_sms_enabled",
-            "web_image_enabled",
-            "generated_url",
+            # "alert_email_enabled",
+            # "alert_email_recipient",
+            # "alert_webhook_enabled",
+            # "alert_webhook_url",
+            # "canarytoken",
+            # "memo",
+            # "browser_scanner_enabled",
+            # "timestamp",
+            # "user",
+            # "auth",
+            # "alert_sms_enabled",
+            # "web_image_enabled",
+            # "generated_url",
         ]:
-            serialized.pop(key, None)
+            serialized.pop(key,None)
         return serialized
 
     def alertable(

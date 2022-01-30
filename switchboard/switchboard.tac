@@ -1,19 +1,22 @@
-import sys, os
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from twisted.names import dns, server
-from caa_monkeypatch import monkey_patch_caa_support
-monkey_patch_caa_support()
+
+# sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+from twisted.names import dns
+# TODO: see if this is still needed.
+# Removed for now
+# from caa_monkeypatch import monkey_patch_caa_support
+# monkey_patch_caa_support()
 
 
 from twisted.application import service, internet
-from loghandlers import webhookLogObserver
+# DESIGN: Will add sentry for sending app errors to a central place.
+# from loghandlers import webhookLogObserver
+# from twisted.logger import ILogObserver, textFileLogObserver, globalLogPublisher
 
-from twisted.logger import ILogObserver, textFileLogObserver, globalLogPublisher
-from twisted.python import logfile
-from twisted.logger import Logger
-log = Logger()
+# from twisted.python import logfile
+# from twisted.logger import Logger
+# log = Logger()
 
-import settings
+# import settings
 from canarytokens.channel_dns import DNSServerFactory, ChannelDNS
 # from channel_http import ChannelHTTP
 # from channel_input_imgur import ChannelImgur
@@ -36,9 +39,8 @@ application = service.Application('Canarydrops Switchboard')
 #                                  maxRotatedFiles=settings.SWITCHBOARD_LOG_COUNT)
 # globalLogPublisher.addObserver(textFileLogObserver(f))
 
-if getattr(settings, 'ERROR_LOG_WEBHOOK', None):
-    # Only create this log observer if the config is setup for it.
-    globalLogPublisher.addObserver(webhookLogObserver())
+from settings import Settings
+settings = Settings()
 
 switchboard = Switchboard()
 
@@ -53,6 +55,8 @@ factory = DNSServerFactory(
         ChannelDNS(
             listen_domain=settings.LISTEN_DOMAIN,
             switchboard=switchboard,
+            settings = settings
+
         ),
     ],
 )

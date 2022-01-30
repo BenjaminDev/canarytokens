@@ -1,12 +1,14 @@
 
 
+from __future__ import annotations
+
 from canarytokens.redismanager import DB
 from canarytokens import canarydrop
-from canarytokens.queries import add_canary_domain, save_canarydrop
-
+from canarytokens.queries import add_canary_domain, get_canarydrop, save_canarydrop
+from canarytokens.exceptions import NoCanarytokenFound, UnknownAttribute
 import pytest
 
-from exception import NoCanarytokenFound, UnknownAttribute
+# from exception import NoCanarytokenFound, UnknownAttribute
 
 def test_ping():
     db=DB.get_db()
@@ -21,7 +23,6 @@ from canarytokens.tokens import Canarytoken, TokenTypes
 def test_canarydrop(token_type):
     canarytoken = Canarytoken()
     add_canary_domain("demo.com")
-
     cd = canarydrop.Canarydrop(
 
                 type=token_type,
@@ -35,8 +36,11 @@ def test_canarydrop(token_type):
                 browser_scanner_enabled=False,
 
     )
-    assert cd.alertable()
     save_canarydrop(cd)
+
+    cd_retrieved = get_canarydrop(canarytoken.value())
+    assert cd_retrieved.memo == cd.memo
+    assert cd_retrieved.canarytoken.value() == cd.canarytoken.value()
 
 def test_not_found_token():
     with pytest.raises(NoCanarytokenFound):

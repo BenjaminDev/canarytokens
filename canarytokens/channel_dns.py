@@ -9,15 +9,17 @@ import base64
 import math
 import re
 
-from exception import UnicodeDecodeError
+# from exception import UnicodeDecodeError
 
-import settings
-from canarytokens.canarydrop import Canarydrop
-from channel import InputChannel
-from constants import INPUT_CHANNEL_DNS
-from exception import NoCanarytokenFound, NoCanarytokenPresent
+# import settings
+
+# from canarytokens.canarydrop import Canarydrop
+from canarytokens.channel import InputChannel
+from canarytokens.constants import INPUT_CHANNEL_DNS
+# from exception import NoCanarytokenFound, NoCanarytokenPresent
 from canarytokens.queries import get_all_canary_domains, get_canarydrop
-from canarytokens.tokens import Canarytoken
+from canarytokens.tokens import handle_query_name
+
 
 
 class DNSServerFactory(server.DNSServerFactory, object):
@@ -65,8 +67,8 @@ class DNSServerFactory(server.DNSServerFactory, object):
 class ChannelDNS(InputChannel):
     CHANNEL = INPUT_CHANNEL_DNS
 
-    def __init__(self, listen_domain='canary.thinknest.com', switchboard=None):
-        super(ChannelDNS, self).__init__(switchboard=switchboard, name=self.CHANNEL)
+    def __init__(self, listen_domain='canary.thinknest.com', switchboard=None, **kwargs):
+        super(ChannelDNS, self).__init__(switchboard=switchboard, name=self.CHANNEL, **kwargs)
         self.listen_domain = listen_domain
         self.canary_domains = get_all_canary_domains()
 
@@ -136,179 +138,10 @@ class ChannelDNS(InputChannel):
         additional = []
         return answers, authority, additional
 
-    def _sql_server_data(self, username=None):
-        data = {}
-        data['sql_username'] = base64.b64decode(
-            username.replace('.', '').replace('-', '='),
-        )
-        return data
 
-    def _mysql_data(self, username=None):
-        data = {}
-        data['mysql_username'] = base64.b32decode(
-            username.replace('.', '').replace('-', '=').upper(),
-        )
-        return data
 
-    def _linux_inotify_data(self, filename=None):
-        data = {}
-        filename = filename.replace('.', '').upper()
-        # this channel doesn't have padding, add if needed
-        filename += '=' * int((math.ceil(float(len(filename)) / 8) * 8 - len(filename)))
-        data['linux_inotify_filename_access'] = base64.b32decode(filename)
-        return data
 
-    def _generic(self, generic_data=None):
-        data = {}
-        generic_data = generic_data.replace('.', '').upper()
-        # this channel doesn't have padding, add if needed
-        generic_data += '=' * int(
-            (math.ceil(float(len(generic_data)) / 8) * 8 - len(generic_data)),
-        )
-        try:
-            data['generic_data'] = base64.b32decode(generic_data)
-        except TypeError:
-            data['generic_data'] = 'Unrecoverable data: {}'.format(generic_data)
-        return data
 
-    def _dtrace_process_data(self, uid=None, hostname=None, command=None):
-        data = {}
-        try:
-            data['dtrace_uid'] = base64.b64decode(uid)
-        except:
-            log.error(
-                'Could not retrieve uid from dtrace '
-                + 'process alert: {uid}'.format(uid=uid),
-            )
-        try:
-            data['dtrace_hostname'] = base64.b64decode(hostname.replace('.', ''))
-        except:
-            log.error(
-                'Could not retrieve hostname from dtrace '
-                + 'process alert: {hostname}'.format(hostname=hostname),
-            )
-        try:
-            data['dtrace_command'] = base64.b64decode(command.replace('.', ''))
-        except:
-            log.error(
-                'Could not retrieve command from dtrace '
-                + 'process alert: {command}'.format(command=command),
-            )
-
-        return data
-
-    def _dtrace_file_open(self, uid=None, hostname=None, filename=None):
-        data = {}
-        try:
-            data['dtrace_uid'] = base64.b64decode(uid)
-        except:
-            log.error(
-                'Could not retrieve uid from dtrace '
-                + 'file open alert: {uid}'.format(uid=uid),
-            )
-
-        try:
-            data['dtrace_hostname'] = base64.b64decode(hostname.replace('.', ''))
-        except:
-            log.error(
-                'Could not retrieve hostname from dtrace '
-                + 'process alert: {hostname}'.format(hostname=hostname),
-            )
-        try:
-            data['dtrace_filename'] = base64.b64decode(filename.replace('.', ''))
-        except:
-            log.error(
-                'Could not retrieve filename from dtrace '
-                + 'file open alert: {filename}'.format(filename=filename),
-            )
-
-        return data
-
-    def _desktop_ini_browsing(self, username=None, hostname=None, domain=None):
-        data = {}
-        data['windows_desktopini_access_username'] = username
-        data['windows_desktopini_access_hostname'] = hostname
-        data['windows_desktopini_access_domain'] = domain
-        return data
-
-    def _log4_shell(self, computer_name=''):
-        data = {}
-        if len(computer_name) <= 1:
-            computer_name = 'Not Obtained'
-        else:
-            computer_name = computer_name[1:]
-        data['log4_shell_computer_name'] = computer_name
-        return data
-
-    def look_for_source_data(self, token=None, value=None):
-        try:
-            value = value.lower()
-            (haystack, domain) = value.split(token)
-            sql_server_username = re.compile(
-                '([A-Za-z0-9.-]*)\.[0-9]{2}\.', re.IGNORECASE,
-            )
-            mysql_username = re.compile('([A-Za-z0-9.-]*)\.M[0-9]{3}\.', re.IGNORECASE)
-            linux_inotify = re.compile('([A-Za-z0-9.-]*)\.L[0-9]{2}\.', re.IGNORECASE)
-            generic = re.compile('([A-Za-z0-9.-]*)\.G[0-9]{2}\.', re.IGNORECASE)
-            dtrace_process = re.compile(
-                '([0-9]+)\.([A-Za-z0-9-=]+)\.h\.([A-Za-z0-9.-=]+)\.c\.([A-Za-z0-9.-=]+)\.D1\.',
-                re.IGNORECASE,
-            )
-            dtrace_file_open = re.compile(
-                '([0-9]+)\.([A-Za-z0-9-=]+)\.h\.([A-Za-z0-9.-=]+)\.f\.([A-Za-z0-9.-=]+)\.D2\.',
-                re.IGNORECASE,
-            )
-            desktop_ini_browsing = re.compile(
-                '([^\.]+)\.([^\.]+)\.?([^\.]*)\.ini\.', re.IGNORECASE,
-            )
-            log4_shell = re.compile('([A-Za-z0-9.-]*)\.L4J\.', re.IGNORECASE)
-
-            m = desktop_ini_browsing.match(value)
-            if m:
-                if m.group(3):
-                    return self._desktop_ini_browsing(
-                        username=m.group(1), hostname=m.group(2), domain=m.group(3),
-                    )
-                else:
-                    return self._desktop_ini_browsing(
-                        username=m.group(1), domain=m.group(2),
-                    )
-
-            m = sql_server_username.match(value)
-            if m:
-                return self._sql_server_data(username=m.group(1))
-
-            m = mysql_username.match(value)
-            if m:
-                return self._mysql_data(username=m.group(1))
-
-            m = linux_inotify.match(value)
-            if m:
-                return self._linux_inotify_data(filename=m.group(1))
-
-            m = generic.match(value)
-            if m:
-                return self._generic(generic_data=m.group(1))
-
-            m = dtrace_process.match(value)
-            if m:
-                return self._dtrace_process_data(
-                    uid=m.group(2), hostname=m.group(3), command=m.group(4),
-                )
-
-            m = dtrace_file_open.match(value)
-            if m:
-                return self._dtrace_file_open(
-                    uid=m.group(2), hostname=m.group(3), filename=m.group(4),
-                )
-
-            m = log4_shell.match(value)
-            if m:
-                return self._log4_shell(computer_name=m.group(1))
-
-        except Exception as e:
-            log.error(e)
-        return {}
 
     def query(self, query, src_ip):
         """
@@ -337,26 +170,13 @@ class ChannelDNS(InputChannel):
             return defer.succeed(self._do_no_response(query=query))
 
         try:
-            token = Canarytoken(value=query.name.name)
+            canarydrop, src_data = handle_query_name()
+            # TODO: What was the deal with this my_sql special case!
+            # Ignoring for now but needs a look see.
+            # if canarydrop._drop['type'] == 'my_sql':
+            #     d = deferLater(...)
 
-            canarydrop = Canarydrop(**get_canarydrop(canarytoken=token.value()))
-
-            src_data = self.look_for_source_data(
-                token=token.value(), value=query.name.name,
-            )
-
-            if canarydrop._drop['type'] == 'my_sql':
-                d = deferLater(
-                    reactor,
-                    10,
-                    self.dispatch,
-                    canarydrop=canarydrop,
-                    src_ip=src_ip,
-                    src_data=src_data,
-                )
-                d.addErrback(self._handleMySqlErr)
-            else:
-                self.dispatch(canarydrop=canarydrop, src_ip=src_ip, src_data=src_data)
+            self.dispatch(canarydrop=canarydrop, src_ip=src_ip, src_data=src_data)
 
         except (NoCanarytokenPresent, NoCanarytokenFound):
             # If we dont find a canarytoken, lets just continue. No need to log.

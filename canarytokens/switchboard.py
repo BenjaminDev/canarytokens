@@ -6,7 +6,7 @@ from twisted.logger import Logger
 
 log = Logger()
 
-from exception import DuplicateChannel, InvalidChannel
+from canarytokens.exceptions import DuplicateChannel, InvalidChannel
 
 
 class Switchboard(object):
