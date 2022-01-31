@@ -1,3 +1,6 @@
+:warning: THIS IS EXPERIMENTAL AND MAY GET ABANDONED :warning:
+
+
 <img src="http://canarytokens.org/resources/logo.png" width="200" />
 
 Canarytokens
