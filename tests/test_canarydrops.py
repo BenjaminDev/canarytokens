@@ -4,7 +4,7 @@ import pytest
 
 from canarytokens import canarydrop
 from canarytokens.exceptions import NoCanarytokenFound, UnknownAttribute
-from canarytokens.queries import (add_canary_domain, get_canarydrop,
+from canarytokens.queries import (add_canary_domain, add_canary_page, add_canary_path_element, get_canarydrop,
                                   save_canarydrop)
 from canarytokens.redismanager import DB
 
@@ -24,7 +24,10 @@ from canarytokens.tokens import Canarytoken, TokenTypes
 @pytest.mark.parametrize("token_type", [o for o in TokenTypes])
 def test_canarydrop(token_type):
     canarytoken = Canarytoken()
+    # TODO: Add a fixture to load expected values from a settings obj
     add_canary_domain("demo.com")
+    add_canary_page("post.jsp")
+    add_canary_path_element("tags")
     cd = canarydrop.Canarydrop(
         type=token_type,
         generate=True,
