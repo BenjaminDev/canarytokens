@@ -9,23 +9,23 @@ from canarytokens.exceptions import RecreatingDBException
 
 
 class DB:
-    _db = None
+    __db = None
 
     @classmethod
     def get_db(cls):
-        if cls._db:
-            return cls._db
+        if cls.__db:
+            return cls.__db
         else:
             # TODO: Fix settings / config this needs a global re think.
-            return cls.create_db(hostname="redis", port=6379)
+            return cls.create_db(hostname="localhost", port=6379)
 
     @classmethod
     def create_db(cls, *, hostname, port, logical_db=0):
-        if cls._db:
+        if cls.__db:
             # TODO: rethink this. Should be fine but we may want to do better.
             raise RecreatingDBException("A db connection exists and we recreating it!")
 
-        cls._db = redis.StrictRedis(
+        cls.__db = redis.StrictRedis(
             host=hostname,
             port=port,
             db=logical_db,
@@ -33,7 +33,7 @@ class DB:
             encoding="utf-8",
             decode_responses=True,
         )
-        return cls._db
+        return cls.__db
 
 
 # db.DEFAULT_EXPIRY = 120
