@@ -17,7 +17,7 @@ jobs:
           - 6379:6379
     strategy:
       matrix:
-        python-version: [3.9, 3.10]
+        python-version: ["3.9", "3.10"]
 
     steps:
       - uses: actions/checkout@v2
@@ -29,6 +29,7 @@ jobs:
         run: |
           sudo apt update -y
           sudo apt install -y build-essential
+          python -m pip install --upgrade pip
           python -m pip install poetry
       - name: Install python dependencies
         run: |
