@@ -11,33 +11,28 @@ import datetime
 import os
 import random
 from hashlib import md5
-from pydantic import BaseModel, EmailStr, constr
 
 import pyqrcode
 import simplejson
+from pydantic import BaseModel, EmailStr, constr
 
 # import wireguard as wg
-from canarytokens.constants import (
-    OUTPUT_CHANNEL_EMAIL,
-    OUTPUT_CHANNEL_TWILIO_SMS,
-    OUTPUT_CHANNEL_WEBHOOK,
-)
-from canarytokens.exceptions import NoCanarytokenPresent, NoUser, UnknownAttribute
-from canarytokens.queries import (
-    add_additional_info_to_hit,
-    add_canarydrop_hit,
-    get_all_canary_domains,
-    get_all_canary_nxdomains,
-    get_all_canary_pages,
-    get_all_canary_path_elements,
-    get_all_canary_sites,
-    get_canarydrop_triggered_list,
-    load_user,
-)
+from canarytokens.constants import (OUTPUT_CHANNEL_EMAIL,
+                                    OUTPUT_CHANNEL_TWILIO_SMS,
+                                    OUTPUT_CHANNEL_WEBHOOK)
+from canarytokens.exceptions import (NoCanarytokenPresent, NoUser,
+                                     UnknownAttribute)
+from canarytokens.models import Anonymous
+from canarytokens.queries import (add_additional_info_to_hit,
+                                  add_canarydrop_hit, get_all_canary_domains,
+                                  get_all_canary_nxdomains,
+                                  get_all_canary_pages,
+                                  get_all_canary_path_elements,
+                                  get_all_canary_sites,
+                                  get_canarydrop_triggered_list, load_user)
 # from canarytokens.tokens import Canarytoken
 # from users import AnonymousUser, User
 from canarytokens.tokens import Canarytoken
-from canarytokens.models import Anonymous
 
 # class CanaryDropData(BaseModel):
 #     canarytoken: Canarytoken
@@ -47,6 +42,7 @@ from canarytokens.models import Anonymous
 #     alert_sms_recipient: constr(max_length=50, strip_whitespace=True) = None
 
 # class
+
 
 class Canarydrop(object):
     allowed_attrs = [
@@ -95,8 +91,7 @@ class Canarydrop(object):
             raise NoCanarytokenPresent()
 
         if "timestamp" not in self._drop:
-            self._drop["timestamp"] = datetime.datetime.utcnow().strftime(
-                "%s.%f")
+            self._drop["timestamp"] = datetime.datetime.utcnow().strftime("%s.%f")
 
         if "imgur_token" in self._drop and not self._drop["imgur_token"]:
             raise Exception("Missing imgur_token from canarytokens.canarydrop")
@@ -358,9 +353,9 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
         serialized = self._drop.copy()
         serialized["type"] = str(serialized["type"])
         for k, v in self._drop.items():
-            if isinstance(v,bool): 
+            if isinstance(v, bool):
                 serialized[k] = str(v)
-            if v is None: # HACK: will fix once _drop is gone.
+            if v is None:  # HACK: will fix once _drop is gone.
                 serialized.pop(k, None)
         if serialized["user"]:
             serialized["user"] = serialized["user"].name
@@ -385,7 +380,7 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
             # "web_image_enabled",
             # "generated_url",
         ]:
-            serialized.pop(key,None)
+            serialized.pop(key, None)
         return serialized
 
     def alertable(

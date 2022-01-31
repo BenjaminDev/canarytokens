@@ -38,16 +38,18 @@ class WebhookOutputChannel(OutputChannel):
 
     def do_send_alert(self, input_channel=None, canarydrop=None, **kwargs):
 
-        slack = 'https://hooks.slack.com'
+        slack = "https://hooks.slack.com"
 
         try:
-            if slack in canarydrop['alert_webhook_url']:
+            if slack in canarydrop["alert_webhook_url"]:
                 payload = input_channel.format_slack_canaryalert(
-                    canarydrop=canarydrop, **kwargs,
+                    canarydrop=canarydrop,
+                    **kwargs,
                 )
             else:
                 payload = input_channel.format_webhook_canaryalert(
-                    canarydrop=canarydrop, **kwargs,
+                    canarydrop=canarydrop,
+                    **kwargs,
                 )
 
             self.generic_webhook_send(simplejson.dumps(payload), canarydrop)
@@ -58,28 +60,30 @@ class WebhookOutputChannel(OutputChannel):
         def handle_response(response):
             if response.code != 200:
                 log.error(
-                    'Failed sending request to webhook {url} with code {error}'.format(
-                        url=canarydrop['alert_webhook_url'], error=response.code,
+                    "Failed sending request to webhook {url} with code {error}".format(
+                        url=canarydrop["alert_webhook_url"],
+                        error=response.code,
                     ),
                 )
             else:
                 log.info(
-                    'Webhook sent to {url}'.format(url=canarydrop['alert_webhook_url']),
+                    "Webhook sent to {url}".format(url=canarydrop["alert_webhook_url"]),
                 )
 
         def handle_error(result):
             log.error(
-                'Failed sending request to webhook {url} with error {error}'.format(
-                    url=canarydrop['alert_webhook_url'], error=result,
+                "Failed sending request to webhook {url} with error {error}".format(
+                    url=canarydrop["alert_webhook_url"],
+                    error=result,
                 ),
             )
 
         agent = Agent(reactor)
         body = BytesProducer(payload)
         d = agent.request(
-            'POST',
-            canarydrop['alert_webhook_url'],
-            Headers({'content-type': ['application/json']}),
+            "POST",
+            canarydrop["alert_webhook_url"],
+            Headers({"content-type": ["application/json"]}),
             body,
         )
         d.addCallback(handle_response)

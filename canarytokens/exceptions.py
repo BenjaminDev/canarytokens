@@ -1,10 +1,18 @@
-class RecreatingDBException(Exception): pass
+class RecreatingDBException(Exception):
+    pass
 
-class NoCanarytokenFound(Exception): pass
 
-class NoCanarytokenPresent(Exception): pass
+class NoCanarytokenFound(Exception):
+    pass
 
-class NoUser(Exception): pass
+
+class NoCanarytokenPresent(Exception):
+    pass
+
+
+class NoUser(Exception):
+    pass
+
 
 class UnknownAttribute(Exception):
     # This does not seem like a sound way to handle
@@ -12,6 +20,10 @@ class UnknownAttribute(Exception):
     # pydantic models and get nice error handling.
     pass
 
-class DuplicateChannel(Exception): pass
 
-class InvalidChannel(Exception): pass
+class DuplicateChannel(Exception):
+    pass
+
+
+class InvalidChannel(Exception):
+    pass

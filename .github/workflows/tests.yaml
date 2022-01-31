@@ -1,0 +1,42 @@
+  name: Test Suite
+
+on:
+  push:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+        #
+        ports:
+          # Opens tcp port 6379 on the host and service container
+          - 6379:6379
+    strategy:
+      matrix:
+        python-version: [3.9, 3.10]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install deps
+        run: |
+          sudo apt update -y
+          sudo apt install -y build-essential
+          python
+      - name: Install python dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Run tests
+        continue-on-error: true
+        run: |
+          coverage run --source=./canarytokens -m pytest tests/
+      - name: Check coverage is over 10 percent
+        run: |
+          coverage report --fail-under 10
