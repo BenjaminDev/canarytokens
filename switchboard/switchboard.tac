@@ -55,7 +55,7 @@ factory = DNSServerFactory(
         ChannelDNS(
             listen_domain=settings.LISTEN_DOMAIN,
             switchboard=switchboard,
-            settings = settings
+            settings = settings,
 
         ),
     ],

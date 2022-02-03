@@ -20,11 +20,15 @@ import simplejson
 from pydantic import BaseModel, EmailStr, HttpUrl, constr
 
 # import wireguard as wg
-from canarytokens.constants import (OUTPUT_CHANNEL_EMAIL,
-                                    OUTPUT_CHANNEL_TWILIO_SMS,
-                                    OUTPUT_CHANNEL_WEBHOOK)
-from canarytokens.exceptions import (NoCanarytokenPresent, NoUser,
-                                     UnknownAttribute)
+from canarytokens.constants import (
+    OUTPUT_CHANNEL_EMAIL,
+    OUTPUT_CHANNEL_TWILIO_SMS,
+    OUTPUT_CHANNEL_WEBHOOK,
+)
+from canarytokens.exceptions import (
+    NoCanarytokenPresent, NoUser,
+    UnknownAttribute,
+)
 from canarytokens.models import Anonymous, User
 from canarytokens import queries
 #  import (add_additional_info_to_hit,
@@ -58,9 +62,9 @@ class Canarydrop(BaseModel):
     created_at: datetime = datetime.now()
     auth: str = md5(
                 str(
-                    random.SystemRandom().randrange(start=1, stop=2 ** 128, step=2)
+                    random.SystemRandom().randrange(start=1, stop=2 ** 128, step=2),
                 ).encode(),
-            ).hexdigest()
+    ).hexdigest()
     type: TokenTypes
     user: Union[User, Anonymous] = Anonymous()
 
@@ -99,10 +103,10 @@ class Canarydrop(BaseModel):
 
     def add_additional_info_to_hit(self, hit_time=None, additional_info={}):
         try:
-            hit_time = hit_time or self._drop["hit_time"]
+            hit_time = hit_time or self._drop['hit_time']
         except:
-            hit_time = self._drop["hit_time"] = datetime.datetime.utcnow().strftime(
-                "%s.%f",
+            hit_time = self._drop['hit_time'] = datetime.datetime.utcnow().strftime(
+                '%s.%f',
             )
 
         if hit_time not in queries.get_canarydrop_triggered_list(self.canarytoken):
@@ -110,7 +114,7 @@ class Canarydrop(BaseModel):
 
         queries.add_additional_info_to_hit(self.canarytoken, hit_time, additional_info)
 
-    def add_canarydrop_hit(self, input_channel="http", **kwargs):
+    def add_canarydrop_hit(self, input_channel='http', **kwargs):
         # if "hit_time" in list(self._drop.keys()):
         #     hit_time = self._drop["hit_time"]
         # else:
@@ -139,7 +143,7 @@ class Canarydrop(BaseModel):
         The random URL is also saved into the Canarydrop."""
         (sites, path_elements, pages) = self.get_url_components()
 
-        generated_url = sites[random.randint(0, len(sites) - 1)] + "/"
+        generated_url = sites[random.randint(0, len(sites) - 1)] + '/'
         path = []
         for count in range(0, random.randint(1, 3)):
             if len(path_elements) == 0:
@@ -148,14 +152,14 @@ class Canarydrop(BaseModel):
             elem = path_elements[random.randint(0, len(path_elements) - 1)]
             path.append(elem)
             path_elements.remove(elem)
-        path.append(self._drop["canarytoken"])
+        path.append(self._drop['canarytoken'])
 
         path.append(pages[random.randint(0, len(pages) - 1)])
-        generated_url += "/".join(path)
+        generated_url += '/'.join(path)
 
-        self._drop["generated_url"] = generated_url
+        self._drop['generated_url'] = generated_url
 
-        return self._drop["generated_url"]
+        return self._drop['generated_url']
 
     def get_random_site(
         self,
@@ -166,8 +170,8 @@ class Canarydrop(BaseModel):
     def get_url(
         self,
     ):
-        if "generated_url" in self._drop:
-            return self._drop["generated_url"]
+        if 'generated_url' in self._drop:
+            return self._drop['generated_url']
         return self.generate_random_url()
 
     def generate_random_hostname(self, with_random=False, nxdomain=False):
@@ -179,14 +183,14 @@ class Canarydrop(BaseModel):
             domains = queries.get_all_canary_domains()
 
         if with_random:
-            generated_hostname = str(random.randint(1, 2 ** 24)) + "."
+            generated_hostname = str(random.randint(1, 2 ** 24)) + '.'
         else:
-            generated_hostname = ""
+            generated_hostname = ''
 
         generated_hostname += (
             self.canarytoken.value()
             # self._drop["canarytoken"]
-            + "."
+            + '.'
             + domains[random.randint(0, len(domains) - 1)].decode()
         )
 
@@ -198,7 +202,7 @@ class Canarydrop(BaseModel):
             with_random=with_random,
             nxdomain=nxdomain,
         )
-        return ("http://" if as_url else "") + random_hostname
+        return ('http://' if as_url else '') + random_hostname
 
     def get_requested_output_channels(
         self,
@@ -216,18 +220,18 @@ class Canarydrop(BaseModel):
 
     def _get_image_as_base64(self, path):
         if os.path.exists(path):
-            with open(path, "r") as f:
+            with open(path, 'r') as f:
                 contents = f.read()
             return base64.b64encode(contents)
 
     def get_web_image_as_base64(
         self,
     ):
-        return self._get_image_as_base64(self["web_image_path"])
+        return self._get_image_as_base64(self['web_image_path'])
 
     def get_secretkeeper_photo_as_base64(self, item):
         return self._get_image_as_base64(
-            self["triggered_list"][item]["additional_info"]["secretkeeper_photo"],
+            self['triggered_list'][item]['additional_info']['secretkeeper_photo'],
         )
 
     def get_cloned_site_javascript(
@@ -244,24 +248,24 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
 }
                 """
         return (
-            CLONED_SITE_JS.replace("CLONED_SITE_DOMAIN", self["clonedsite"])
-            .replace("CANARYTOKEN_SITE", self.get_random_site())
-            .replace("CANARYTOKEN", self["canarytoken"])
+            CLONED_SITE_JS.replace('CLONED_SITE_DOMAIN', self['clonedsite'])
+            .replace('CANARYTOKEN_SITE', self.get_random_site())
+            .replace('CANARYTOKEN', self['canarytoken'])
         )
 
     def get_qrcode_data_uri_png(
         self,
     ):
         qrcode = pyqrcode.create(self.get_url()).png_as_base64_str(scale=5)
-        return "data:image/png;base64,{qrcode}".format(qrcode=qrcode)
+        return 'data:image/png;base64,{qrcode}'.format(qrcode=qrcode)
 
     def get_wg_conf(self):
-        return wg.clientConfig(self._drop["wg_key"])
+        return wg.clientConfig(self._drop['wg_key'])
 
     def get_wg_qrcode(self):
         wg_conf = self.get_wg_conf()
         qrcode = pyqrcode.create(wg_conf).png_as_base64_str(scale=2)
-        return "data:image/png;base64,{}".format(qrcode)
+        return 'data:image/png;base64,{}'.format(qrcode)
 
 
 
@@ -275,21 +279,21 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
         into redis."""
         # TODO: rip out the _drop make this a dataclass or pydantic class
         # DESIGN: this needs a re-work. defering until tests passing and coverage is high.
-        serialized = json.loads(self.json(exclude={"canarytoken"})) # TODO: check https://github.com/samuelcolvin/pydantic/issues/1409 and swap out when possible
+        serialized = json.loads(self.json(exclude={'canarytoken'})) # TODO: check https://github.com/samuelcolvin/pydantic/issues/1409 and swap out when possible
 
         # serialized = self._drop.copy()
-        serialized["type"] = str(serialized["type"])
+        serialized['type'] = str(serialized['type'])
         for k, v in serialized.copy().items():
             if isinstance(v, bool):
                 serialized[k] = str(v)
             if v is None:  # HACK: will fix once _drop is gone.
                 serialized.pop(k, None)
-        if serialized["user"]:
-            serialized["user"] = serialized["user"]["name"]
+        if serialized['user']:
+            serialized['user'] = serialized['user']['name']
 
-        if "triggered_details" in list(serialized.keys()):
-            serialized["triggered_details"] = simplejson.dumps(
-                serialized["triggered_details"],
+        if 'triggered_details' in list(serialized.keys()):
+            serialized['triggered_details'] = simplejson.dumps(
+                serialized['triggered_details'],
             )
         for key in [
             # "type",

@@ -14,26 +14,28 @@ from canarytokens import models
 
 # import settings
 # from exception import LinkedInFailure
-from canarytokens.redismanager import (DB, KEY_BITCOIN_ACCOUNT,
-                                       KEY_BITCOIN_ACCOUNTS,
-                                       KEY_CANARY_DOMAINS,
-                                       KEY_CANARY_GOOGLE_API_KEY,
-                                       KEY_CANARY_IP_CACHE,
-                                       KEY_CANARY_NXDOMAINS, KEY_CANARY_PAGES,
-                                       KEY_CANARY_PATH_ELEMENTS,
-                                       KEY_CANARYDROP,
-                                       KEY_CANARYDROPS_TIMELINE,
-                                       KEY_CANARYTOKEN_ALERT_COUNT,
-                                       KEY_CLONEDSITE_TOKEN,
-                                       KEY_CLONEDSITE_TOKENS, KEY_EMAIL_IDX,
-                                       KEY_IMGUR_TOKEN, KEY_IMGUR_TOKENS,
-                                       KEY_KUBECONFIG_CERTS,
-                                       KEY_KUBECONFIG_HITS,
-                                       KEY_KUBECONFIG_SERVEREP,
-                                       KEY_LINKEDIN_ACCOUNT,
-                                       KEY_LINKEDIN_ACCOUNTS,
-                                       KEY_TOR_EXIT_NODES, KEY_USER_ACCOUNT,
-                                       KEY_WEBHOOK_IDX, KEY_WIREGUARD_KEYMAP)
+from canarytokens.redismanager import (
+    DB, KEY_BITCOIN_ACCOUNT,
+    KEY_BITCOIN_ACCOUNTS,
+    KEY_CANARY_DOMAINS,
+    KEY_CANARY_GOOGLE_API_KEY,
+    KEY_CANARY_IP_CACHE,
+    KEY_CANARY_NXDOMAINS, KEY_CANARY_PAGES,
+    KEY_CANARY_PATH_ELEMENTS,
+    KEY_CANARYDROP,
+    KEY_CANARYDROPS_TIMELINE,
+    KEY_CANARYTOKEN_ALERT_COUNT,
+    KEY_CLONEDSITE_TOKEN,
+    KEY_CLONEDSITE_TOKENS, KEY_EMAIL_IDX,
+    KEY_IMGUR_TOKEN, KEY_IMGUR_TOKENS,
+    KEY_KUBECONFIG_CERTS,
+    KEY_KUBECONFIG_HITS,
+    KEY_KUBECONFIG_SERVEREP,
+    KEY_LINKEDIN_ACCOUNT,
+    KEY_LINKEDIN_ACCOUNTS,
+    KEY_TOR_EXIT_NODES, KEY_USER_ACCOUNT,
+    KEY_WEBHOOK_IDX, KEY_WIREGUARD_KEYMAP,
+)
 from canarytokens import tokens
 
 
@@ -47,17 +49,17 @@ from canarytokens import canarydrop as cand
 def get_canarydrop(canarytoken: str) -> cand.Canarydrop:
     canarydrop = DB.get_db().hgetall(KEY_CANARYDROP + canarytoken)
     # TODO: this should get handled by Canarydrop class
-    if "triggered_details" in list(canarydrop.keys()):
-        canarydrop["triggered_details"] = simplejson.loads(canarydrop["triggered_details"])
-    if "user" in canarydrop.keys():
+    if 'triggered_details' in list(canarydrop.keys()):
+        canarydrop['triggered_details'] = simplejson.loads(canarydrop['triggered_details'])
+    if 'user' in canarydrop.keys():
         # FIXME: short cut as users are not first class citizens yet.
-        canarydrop["user"] = models.Anonymous()
-    canarydrop["canarytoken"] = tokens.Canarytoken(canarytoken)
+        canarydrop['user'] = models.Anonymous()
+    canarydrop['canarytoken'] = tokens.Canarytoken(canarytoken)
     return cand.Canarydrop(**canarydrop)
 
 
 def get_all_canary_sites():
-    return [f"http://{str(o)}" for o in get_all_canary_domains()]
+    return [f'http://{str(o)}' for o in get_all_canary_domains()]
 
 
 def get_all_canary_path_elements():
@@ -156,21 +158,21 @@ def save_canarydrop(canarydrop):
 
     canarytoken = canarydrop.canarytoken
     DB.get_db().hset(
-        KEY_CANARYDROP + canarytoken.value(), mapping=canarydrop.serialize()
+        KEY_CANARYDROP + canarytoken.value(), mapping=canarydrop.serialize(),
     )
 
-    log.info("Saved canarydrop: {canarydrop}".format(canarydrop=canarydrop.serialize()))
+    log.info('Saved canarydrop: {canarydrop}'.format(canarydrop=canarydrop.serialize()))
 
     # if the canarydrop is new, save to the timeline
     if DB.get_db().zscore(KEY_CANARYDROPS_TIMELINE, canarytoken.value()) == None:
-        current_time = datetime.datetime.utcnow().strftime("%s.%f")
+        current_time = datetime.datetime.utcnow().strftime('%s.%f')
         DB.get_db().zadd(KEY_CANARYDROPS_TIMELINE, {canarytoken.value(): current_time})
 
-    if canarydrop["alert_email_recipient"]:
-        add_email_token_idx(canarydrop["alert_email_recipient"], canarytoken.value())
+    if canarydrop['alert_email_recipient']:
+        add_email_token_idx(canarydrop['alert_email_recipient'], canarytoken.value())
 
-    if canarydrop["alert_webhook_url"]:
-        add_webhook_token_idx(canarydrop["alert_webhook_url"], canarytoken.value())
+    if canarydrop['alert_webhook_url']:
+        add_webhook_token_idx(canarydrop['alert_webhook_url'], canarytoken.value())
 
 
 def get_canarydrop_triggered_list(canarytoken):
@@ -178,7 +180,7 @@ def get_canarydrop_triggered_list(canarytoken):
     Returns the triggered list for a Canarydrop, or {} if it does not exist
     """
     key = KEY_CANARYDROP + canarytoken.value()
-    triggered_list = DB.get_db().hget(key, "triggered_list")
+    triggered_list = DB.get_db().hget(key, 'triggered_list')
     if not triggered_list:
         triggered_list = {}
     else:
@@ -201,26 +203,26 @@ def add_canarydrop_hit(canarytoken, input_channel, hit_time=None, **kwargs):
     triggered_list = get_canarydrop_triggered_list(canarytoken)
 
     triggered_key = (
-        hit_time if hit_time else datetime.datetime.utcnow().strftime("%s.%f")
+        hit_time if hit_time else datetime.datetime.utcnow().strftime('%s.%f')
     )
     triggered_list[triggered_key] = kwargs
-    triggered_list[triggered_key]["input_channel"] = input_channel
+    triggered_list[triggered_key]['input_channel'] = input_channel
     if (
-        kwargs.get("src_data", None)
-        and "aws_keys_event_source_ip" in kwargs["src_data"]
+        kwargs.get('src_data', None)
+        and 'aws_keys_event_source_ip' in kwargs['src_data']
     ):
-        triggered_list[triggered_key]["geo_info"] = get_geoinfo(
-            kwargs["src_data"]["aws_keys_event_source_ip"],
+        triggered_list[triggered_key]['geo_info'] = get_geoinfo(
+            kwargs['src_data']['aws_keys_event_source_ip'],
         )
-        triggered_list[triggered_key]["is_tor_relay"] = is_tor_relay(
-            kwargs["src_data"]["aws_keys_event_source_ip"],
+        triggered_list[triggered_key]['is_tor_relay'] = is_tor_relay(
+            kwargs['src_data']['aws_keys_event_source_ip'],
         )
-    elif kwargs.get("src_ip", None):
-        triggered_list[triggered_key]["geo_info"] = get_geoinfo(kwargs["src_ip"])
-        triggered_list[triggered_key]["is_tor_relay"] = is_tor_relay(kwargs["src_ip"])
+    elif kwargs.get('src_ip', None):
+        triggered_list[triggered_key]['geo_info'] = get_geoinfo(kwargs['src_ip'])
+        triggered_list[triggered_key]['is_tor_relay'] = is_tor_relay(kwargs['src_ip'])
     DB.get_db().hset(
         KEY_CANARYDROP + canarytoken.value(),
-        "triggered_list",
+        'triggered_list',
         simplejson.dumps(triggered_list),
     )
     return triggered_key
@@ -233,25 +235,25 @@ def add_additional_info_to_hit(canarytoken, hit_time, additional_info=None):
 
         triggered_list = get_canarydrop_triggered_list(canarytoken)
 
-        if "additional_info" not in triggered_list[hit_time]:
-            triggered_list[hit_time]["additional_info"] = {}
+        if 'additional_info' not in triggered_list[hit_time]:
+            triggered_list[hit_time]['additional_info'] = {}
         for k, v in additional_info.items():
-            if k in list(triggered_list[hit_time]["additional_info"].keys()):
-                triggered_list[hit_time]["additional_info"][k].update(v)
+            if k in list(triggered_list[hit_time]['additional_info'].keys()):
+                triggered_list[hit_time]['additional_info'][k].update(v)
             else:
-                triggered_list[hit_time]["additional_info"][k] = v
+                triggered_list[hit_time]['additional_info'][k] = v
         DB.get_db().hset(
             KEY_CANARYDROP + canarytoken.value(),
-            "triggered_list",
+            'triggered_list',
             simplejson.dumps(triggered_list),
         )
     except Exception as e:
-        log.error("Failed adding additional info: {err}".format(err=e))
+        log.error('Failed adding additional info: {err}'.format(err=e))
 
 
 def get_aws_keys(token=None, server=None):
     if not (token or server) or len(token) == 0 or len(server) == 0:
-        log.error("Empty values passed through to get_aws_keys function.")
+        log.error('Empty values passed through to get_aws_keys function.')
         return False
     try:
         # data = base64.b64encode('U:'+server+':'+token)
@@ -259,39 +261,39 @@ def get_aws_keys(token=None, server=None):
         if not validate_hostname(server):
             return False
 
-        data = server + "@@" + token
+        data = server + '@@' + token
         if len(data) > 64:
             log.error(
-                "Length of the Server Name and token is too long. Will not work on AWS",
+                'Length of the Server Name and token is too long. Will not work on AWS',
             )
             return False
 
         url = str(settings.AWSID_URL)
 
-        resp = requests.get("{url}?data={d}".format(url=url, d=data))
+        resp = requests.get('{url}?data={d}'.format(url=url, d=data))
         if not resp:
-            log.error("Bad response from getting aws keys")
+            log.error('Bad response from getting aws keys')
             return False
         resp_json = resp.json()
-        access_key_id = resp_json["access_key_id"]
-        secret_access_key = resp_json["secret_access_key"]
-        region = "us-east-2"
-        output = "json"
+        access_key_id = resp_json['access_key_id']
+        secret_access_key = resp_json['secret_access_key']
+        region = 'us-east-2'
+        output = 'json'
         return (access_key_id, secret_access_key, region, output)
     except Exception as e:
-        log.error("Error getting aws keys: {err}".format(err=e))
+        log.error('Error getting aws keys: {err}'.format(err=e))
         return False
 
 
 def validate_hostname(hostname):
     import re
 
-    print("Going to search {e} for bad username characters".format(e=hostname))
-    pattern = re.compile("[^a-zA-Z0-9+=,.@_-]")
+    print('Going to search {e} for bad username characters'.format(e=hostname))
+    pattern = re.compile('[^a-zA-Z0-9+=,.@_-]')
     match = pattern.search(hostname)
     if match:
         log.error(
-            "Hostname contains a bad character for AWS username {m} ... aborting".format(
+            'Hostname contains a bad character for AWS username {m} ... aborting'.format(
                 m=match.group(0),
             ),
         )
@@ -309,20 +311,20 @@ def get_geoinfo(ip):
             add_ip_to_cache(ip, resp)
             return resp
         except Exception as e:
-            log.warn("Error getting geo ip: {err}".format(err=e))
-            return ""
+            log.warn('Error getting geo ip: {err}'.format(err=e))
+            return ''
 
 
 def get_geoinfo_from_ip(ip):
     if not settings.IPINFO_API_KEY:
-        resp = requests.get("http://ipinfo.io/" + ip + "/json")
+        resp = requests.get('http://ipinfo.io/' + ip + '/json')
     else:
         resp = requests.get(
-            "http://ipinfo.io/" + ip + "/json/",
-            auth=(settings.IPINFO_API_KEY, ""),
+            'http://ipinfo.io/' + ip + '/json/',
+            auth=(settings.IPINFO_API_KEY, ''),
         )
     if resp.status_code != 200:
-        raise Exception("ipinfo.io response was unexpected: {resp}".format(resp=resp))
+        raise Exception('ipinfo.io response was unexpected: {resp}'.format(resp=resp))
     return resp.json()
 
 
@@ -348,7 +350,7 @@ def add_ip_to_cache(ip, geoinfo, exp_time=60 * 60 * 24):
     DB.get_db().setex(key, exp_time, simplejson.dumps(geoinfo))
 
 
-def get_canarydrops(min_time="-inf", max_time="+inf"):
+def get_canarydrops(min_time='-inf', max_time='+inf'):
     """Return a list of stored Canarydrops.
     Arguments:
     min_time -- Limit to Canarydrops created after min_time. Format is Unix
@@ -358,13 +360,13 @@ def get_canarydrops(min_time="-inf", max_time="+inf"):
     """
     canarydrops = []
     for canarytoken in DB.get_db().zrangebyscore(
-        KEY_CANARYDROPS_TIMELINE, min_time, max_time
+        KEY_CANARYDROPS_TIMELINE, min_time, max_time,
     ):
         canarydrops.append(Canarydrop(**get_canarydrop(canarytoken=canarytoken)))
     return canarydrops
 
 
-def get_canarydrops_array(min_time="-inf", max_time="+inf"):
+def get_canarydrops_array(min_time='-inf', max_time='+inf'):
     """Return an array of stored Canarydrops.
     Arguments:
     min_time -- Limit to Canarydrops created after min_time. Format is Unix
@@ -374,7 +376,7 @@ def get_canarydrops_array(min_time="-inf", max_time="+inf"):
     """
     canarydrops = []
     for canarytoken in DB.get_db().zrangebyscore(
-        KEY_CANARYDROPS_TIMELINE, min_time, max_time
+        KEY_CANARYDROPS_TIMELINE, min_time, max_time,
     ):
         canarydrops.append(get_canarydrop(canarytoken=canarytoken))
     return canarydrops
@@ -405,14 +407,14 @@ def save_canarytoken_alert_count(canarytoken, count, expiry):
 
 
 def save_clonedsite_token(clonedsite_token):
-    if not clonedsite_token.get("canarytoken"):
-        raise Exception("Cannot save an imgur token without a canarydrop")
+    if not clonedsite_token.get('canarytoken'):
+        raise Exception('Cannot save an imgur token without a canarydrop')
 
     key = (
         KEY_CLONEDSITE_TOKEN
-        + clonedsite_token["clonedsite"]
-        + ":"
-        + clonedsite_token["canarytoken"]
+        + clonedsite_token['clonedsite']
+        + ':'
+        + clonedsite_token['canarytoken']
     )
     DB.get_db().hmset(key, clonedsite_token)
     DB.get_db().sadd(KEY_CLONEDSITE_TOKENS, key)
@@ -421,22 +423,22 @@ def save_clonedsite_token(clonedsite_token):
 
 def get_imgur_count(imgur_id=None):
     resp = requests.get(
-        "http://imgur.com/ajax/views?images={imgur_id}".format(imgur_id=imgur_id),
+        'http://imgur.com/ajax/views?images={imgur_id}'.format(imgur_id=imgur_id),
     )
     resp = resp.json()
-    if not resp["success"] or resp["status"] != 200:
-        raise Exception("Imgur response was unexpected: {resp}".format(resp=resp))
-    return resp["data"][imgur_id]
+    if not resp['success'] or resp['status'] != 200:
+        raise Exception('Imgur response was unexpected: {resp}'.format(resp=resp))
+    return resp['data'][imgur_id]
 
 
 def save_imgur_token(imgur_token):
-    if not imgur_token.get("canarytoken"):
-        raise Exception("Cannot save an imgur token without a canarydrop")
+    if not imgur_token.get('canarytoken'):
+        raise Exception('Cannot save an imgur token without a canarydrop')
 
-    if not imgur_token.get("count", None):
-        imgur_token["count"] = get_imgur_count(imgur_id=imgur_token["id"])
+    if not imgur_token.get('count', None):
+        imgur_token['count'] = get_imgur_count(imgur_id=imgur_token['id'])
 
-    key = KEY_IMGUR_TOKEN + imgur_token["id"]
+    key = KEY_IMGUR_TOKEN + imgur_token['id']
     DB.get_db().hmset(key, imgur_token)
     DB.get_db().sadd(KEY_IMGUR_TOKENS, key)
     return key
@@ -446,7 +448,7 @@ def get_all_imgur_tokens():
     all_imgur_tokens = []
     for key in DB.get_db().smembers(KEY_IMGUR_TOKENS):
         all_imgur_tokens.append(DB.get_db().hgetall(key))
-        all_imgur_tokens[-1]["count"] = int(all_imgur_tokens[-1]["count"])
+        all_imgur_tokens[-1]['count'] = int(all_imgur_tokens[-1]['count'])
     return all_imgur_tokens
 
 
@@ -458,47 +460,47 @@ def get_linkedin_viewer_count(username=None, password=None):
     from twill.errors import TwillException
 
     add_extra_header(
-        "User-Agent",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.132 Safari/537.36",
+        'User-Agent',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.132 Safari/537.36',
     )
-    go("https://www.linkedin.com/nhome/")
+    go('https://www.linkedin.com/nhome/')
     # Added because LinkedIn login page no longer names the login form.
     b = get_browser()
-    form_num = ""
+    form_num = ''
     for n, f in enumerate(b.get_all_forms()):
         try:
-            b.get_form_field(f, "session_key")
-            b.get_form_field(f, "session_password")
+            b.get_form_field(f, 'session_key')
+            b.get_form_field(f, 'session_password')
             form_num = str(n + 1)
         except TwillException:
             pass
-    if form_num == "":
-        log.error("Failed to parse LinkedIn login page - page format may have changed.")
+    if form_num == '':
+        log.error('Failed to parse LinkedIn login page - page format may have changed.')
         raise LinkedInFailure()
     # fv("login", 'session_password', 'LetsTryPrime')
     # fv("login", 'session_key', 'ms_DerrickWortham@endian.co.za')
-    fv(form_num, "session_key", username)
-    fv(form_num, "session_password", password)
+    fv(form_num, 'session_key', username)
+    fv(form_num, 'session_password', password)
     submit()
-    go("http://www.linkedin.com/wvmx/profile?trk=nav_responsive_sub_nav_wvmp")
+    go('http://www.linkedin.com/wvmx/profile?trk=nav_responsive_sub_nav_wvmp')
 
     try:
         for i in (
             get_browser()
-            .result.lxml.get_element_by_id("viewers_list-content")
+            .result.lxml.get_element_by_id('viewers_list-content')
             .iterchildren()
         ):
-            user_listing = simplejson.loads(i.text.replace("\\u002d", "-"))
+            user_listing = simplejson.loads(i.text.replace('\\u002d', '-'))
     except Exception as e:
-        log.error("Failed to extract user_listing from page: {error}".format(error=e))
+        log.error('Failed to extract user_listing from page: {error}'.format(error=e))
         raise LinkedInFailure()
 
     try:
-        current_count = user_listing["content"]["wvmx_profile_viewers"]["viewersCount"]
+        current_count = user_listing['content']['wvmx_profile_viewers']['viewersCount']
         return current_count
     except KeyError:
         log.error(
-            "Profile view struct in unknown format: {user_listing}".format(
+            'Profile view struct in unknown format: {user_listing}'.format(
                 user_listing=user_listing,
             ),
         )
@@ -511,9 +513,9 @@ def get_linkedin_account(username_key=None, username=None):
 
     data = DB.get_db().hgetall(username_key)
     try:
-        data["count"] = int(data["count"])
+        data['count'] = int(data['count'])
     except KeyError:
-        data["count"] = -1
+        data['count'] = -1
     return data
 
 
@@ -540,24 +542,24 @@ def create_linkedin_account(username=None, password=None, canarydrop=None):
     else:
         ht = canarydrop.canarytoken
 
-    canarydrop["linkedin_username"] = username
+    canarydrop['linkedin_username'] = username
     save_canarydrop(canarydrop=canarydrop)
 
     linkedin_account = {
-        "username": username.lower(),
-        "password": password,
-        "canarytoken": ht.value(),
-        "count": get_linkedin_viewer_count(username=username, password=password),
+        'username': username.lower(),
+        'password': password,
+        'canarytoken': ht.value(),
+        'count': get_linkedin_viewer_count(username=username, password=password),
     }
 
     return save_linkedin_account(linkedin_account=linkedin_account)
 
 
 def save_linkedin_account(linkedin_account=None):
-    if not linkedin_account.get("canarytoken"):
-        raise Exception("Cannot save an LinkedIn account without a canarydrop")
+    if not linkedin_account.get('canarytoken'):
+        raise Exception('Cannot save an LinkedIn account without a canarydrop')
 
-    key = KEY_LINKEDIN_ACCOUNT + linkedin_account["username"]
+    key = KEY_LINKEDIN_ACCOUNT + linkedin_account['username']
     DB.get_db().hmset(key, linkedin_account)
     DB.get_db().sadd(KEY_LINKEDIN_ACCOUNTS, key)
     return key
@@ -569,9 +571,9 @@ def get_bitcoin_account(address_key=None, address=None):
 
     data = DB.get_db().hgetall(address_key)
     try:
-        data["balance"] = int(data["balance"])
+        data['balance'] = int(data['balance'])
     except KeyError:
-        data["balance"] = -1
+        data['balance'] = -1
     return data
 
 
@@ -584,15 +586,15 @@ def get_all_bitcoin_accounts():
 
 def get_bitcoin_address_balance(address=None):
     resp = requests.get(
-        "https://blockchain.info/q/addressbalance/{address}".format(address=address),
+        'https://blockchain.info/q/addressbalance/{address}'.format(address=address),
     )
 
     if resp.status_code != 200:
-        raise Exception("Bitcoin response was unexpected: {resp}".format(resp=resp))
+        raise Exception('Bitcoin response was unexpected: {resp}'.format(resp=resp))
     try:
         return int(resp.content)
     except ValueError:
-        raise Exception("Bitcoin response was unexpected: {resp}".format(resp=resp))
+        raise Exception('Bitcoin response was unexpected: {resp}'.format(resp=resp))
 
 
 def create_bitcoin_account(address=None, canarydrop=None):
@@ -611,23 +613,23 @@ def create_bitcoin_account(address=None, canarydrop=None):
     else:
         ht = canarydrop.canarytoken
 
-    canarydrop["bitcoin_account"] = address
+    canarydrop['bitcoin_account'] = address
     save_canarydrop(canarydrop=canarydrop)
 
     bitcoin_account = {
-        "canarytoken": ht.value(),
-        "address": address,
-        "balance": get_bitcoin_address_balance(address=address),
+        'canarytoken': ht.value(),
+        'address': address,
+        'balance': get_bitcoin_address_balance(address=address),
     }
 
     return save_bitcoin_account(bitcoin_account=bitcoin_account)
 
 
 def save_bitcoin_account(bitcoin_account=None):
-    if not bitcoin_account.get("canarytoken"):
-        raise Exception("Cannot save an Bitcoin account without a canarydrop")
+    if not bitcoin_account.get('canarytoken'):
+        raise Exception('Cannot save an Bitcoin account without a canarydrop')
 
-    key = KEY_BITCOIN_ACCOUNT + bitcoin_account["address"]
+    key = KEY_BITCOIN_ACCOUNT + bitcoin_account['address']
     DB.get_db().hmset(key, bitcoin_account)
     DB.get_db().sadd(KEY_BITCOIN_ACCOUNTS, key)
     return key
@@ -638,40 +640,40 @@ def is_webhook_valid(url):
     Arguments:
     url -- Webhook url
     """
-    if not url or url == "":
+    if not url or url == '':
         return False
 
-    slack = "https://hooks.slack.com"
+    slack = 'https://hooks.slack.com'
     if slack in url:
-        payload = {"text": "Validating new canarytokens webhook"}
+        payload = {'text': 'Validating new canarytokens webhook'}
     else:
         payload = {
-            "manage_url": "http://example.com/test/url/for/webhook",
-            "memo": "Congrats! The newly saved webhook works",
-            "additional_data": {
-                "src_ip": "1.1.1.1",
-                "useragent": "Mozilla/5.0...",
-                "referer": "http://example.com/referrer",
-                "location": "http://example.com/location",
+            'manage_url': 'http://example.com/test/url/for/webhook',
+            'memo': 'Congrats! The newly saved webhook works',
+            'additional_data': {
+                'src_ip': '1.1.1.1',
+                'useragent': 'Mozilla/5.0...',
+                'referer': 'http://example.com/referrer',
+                'location': 'http://example.com/location',
             },
-            "channel": "HTTP",
-            "time": datetime.datetime.now().strftime("%Y-%m-%d %T"),
+            'channel': 'HTTP',
+            'time': datetime.datetime.now().strftime('%Y-%m-%d %T'),
         }
     try:
         response = requests.post(
             url,
             simplejson.dumps(payload),
-            headers={"content-type": "application/json"},
+            headers={'content-type': 'application/json'},
             timeout=10,
         )
         response.raise_for_status()
         return True
     except requests.exceptions.Timeout as e:
-        log.error("Timed out sending test payload to webhook: {url}".format(url=url))
+        log.error('Timed out sending test payload to webhook: {url}'.format(url=url))
         return False
     except requests.exceptions.RequestException as e:
         log.error(
-            "Failed sending test payload to webhook: {url} with error {error}".format(
+            'Failed sending test payload to webhook: {url} with error {error}'.format(
                 url=url,
                 error=e,
             ),
@@ -686,11 +688,11 @@ def is_tor_relay(ip):
 
 
 def update_tor_exit_nodes(contents):
-    if "ExitAddress" in contents:
+    if 'ExitAddress' in contents:
         DB.get_db().delete(KEY_TOR_EXIT_NODES)
     for line in contents.splitlines():
-        if "ExitAddress" in line:
-            DB.get_db().sadd(KEY_TOR_EXIT_NODES, simplejson.dumps(line.split(" ")[1]))
+        if 'ExitAddress' in line:
+            DB.get_db().sadd(KEY_TOR_EXIT_NODES, simplejson.dumps(line.split(' ')[1]))
 
 
 def update_tor_exit_nodes_loop():
@@ -701,7 +703,7 @@ def update_tor_exit_nodes_loop():
 
 
 def get_certificate(key, _type=None):
-    certificate = DB.get_db().hgetall("{}{}".format(KEY_KUBECONFIG_CERTS, key))
+    certificate = DB.get_db().hgetall('{}{}'.format(KEY_KUBECONFIG_CERTS, key))
     if certificate is not None and _type is not None:
         return certificate.get(_type, None)
 
@@ -709,7 +711,7 @@ def get_certificate(key, _type=None):
 
 
 def save_certificate(key, cert_obj):
-    DB.get_db().hmset("{}{}".format(KEY_KUBECONFIG_CERTS, key), cert_obj)
+    DB.get_db().hmset('{}{}'.format(KEY_KUBECONFIG_CERTS, key), cert_obj)
 
 
 def save_kc_endpoint(endpoint):
@@ -721,8 +723,8 @@ def get_kc_endpoint():
 
 
 def save_kc_hit_for_aggregation(key, hits, update=False):
-    hit_key = "{}{}".format(KEY_KUBECONFIG_HITS, key)
-    DB.get_db().hset(hit_key, "hits", hits)
+    hit_key = '{}{}'.format(KEY_KUBECONFIG_HITS, key)
+    DB.get_db().hset(hit_key, 'hits', hits)
 
     if not update:
         # typical timeout sent with each kubectl caching discovery request is 32s, and 5 requests are sent as part of each kubectl execution
@@ -731,8 +733,8 @@ def save_kc_hit_for_aggregation(key, hits, update=False):
 
 def get_kc_hits(key):
     return (
-        DB.get_db().hgetall("{}{}".format(KEY_KUBECONFIG_HITS, key)),
-        DB.get_db().pttl("{}{}".format(KEY_KUBECONFIG_HITS, key)),
+        DB.get_db().hgetall('{}{}'.format(KEY_KUBECONFIG_HITS, key)),
+        DB.get_db().pttl('{}{}'.format(KEY_KUBECONFIG_HITS, key)),
     )
 
 

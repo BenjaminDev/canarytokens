@@ -69,4 +69,4 @@ class User(BaseModel):
 
 
 class Anonymous(User):
-    name: constr(max_length=30, strip_whitespace=True, to_lower=True) = "Anonymous"
+    name: constr(max_length=30, strip_whitespace=True, to_lower=True) = 'Anonymous'

@@ -5,19 +5,21 @@ from pydantic import BaseModel
 
 from canarytokens.canarydrop import Canarydrop, Canarytoken
 from canarytokens.models import DNSTokenRequest, DNSTokenResponse
-from canarytokens.queries import (add_canary_domain, remove_canary_domain,
-                                  save_canarydrop)
+from canarytokens.queries import (
+    add_canary_domain, remove_canary_domain,
+    save_canarydrop,
+)
 
 app = FastAPI()
 
 
-@app.on_event("startup")
+@app.on_event('startup')
 def startup_event():
     remove_canary_domain()
-    add_canary_domain(domain="127.0.0.1")
+    add_canary_domain(domain='127.0.0.1')
 
 
-@app.post("/generate")
+@app.post('/generate')
 def generate(details: DNSTokenRequest) -> DNSTokenResponse:
     canarytoken = Canarytoken()
     canarydrop = Canarydrop(
@@ -33,9 +35,9 @@ def generate(details: DNSTokenRequest) -> DNSTokenResponse:
     )
     save_canarydrop(canarydrop)
     return DNSTokenResponse(
-        email=canarydrop.get("alert_email_recipient"),
+        email=canarydrop.get('alert_email_recipient'),
         token=canarydrop.canarytoken.value(),
         token_url=canarydrop.get_url(),
-        auth_token=canarydrop["auth"],
+        auth_token=canarydrop['auth'],
         hostname=canarydrop.get_hostname(),
     )

@@ -11,16 +11,16 @@ class Settings(BaseSettings):
     CHANNEL_SMTP_PORT: conint(gt=0, lt=65535) = 2500
     CHANNEL_MYSQL_PORT: conint(gt=0, lt=65535) = 6033
 
-    REDIS_HOST: str = "redis"
+    REDIS_HOST: str = 'redis'
     REDIS_PORT: conint(gt=0, lt=65535) = 6379
-    REDIS_DB: str = "0"
+    REDIS_DB: str = '0'
 
     LISTEN_DOMAIN: str
 
     class Config:
-        env_file = "switchboard.env"
-        env_file_encoding = "utf-8"
-        env_prefix = "CANARY_"
+        env_file = 'switchboard.env'
+        env_file_encoding = 'utf-8'
+        env_prefix = 'CANARY_'
 
 
 # settingsmodule = sys.modules[__name__]

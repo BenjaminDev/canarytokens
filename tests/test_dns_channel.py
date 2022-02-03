@@ -15,7 +15,7 @@ import os
 
 # @pytest.fixture(scope="session", autouse=True)
 def clear_db():
-    redis_hostname = "localhost" if strtobool(os.getenv("CI", "False")) else "redis"
+    redis_hostname = 'localhost' if strtobool(os.getenv('CI', 'False')) else 'redis'
     DB.set_db_details(hostname=redis_hostname, port=6379)
     redis = DB.get_db()
     for key in redis.scan_iter():
@@ -151,18 +151,18 @@ class Settings(BaseSettings):
     CHANNEL_SMTP_PORT: conint(gt=0, lt=65535) = 2500
     CHANNEL_MYSQL_PORT: conint(gt=0, lt=65535) = 6033
 
-    PUBLIC_IP:str = "10.0.1.3"
+    PUBLIC_IP:str = '10.0.1.3'
 
-    REDIS_HOST: str = "redis"
+    REDIS_HOST: str = 'redis'
     REDIS_PORT: conint(gt=0, lt=65535) = 6379
-    REDIS_DB: str = "0"
+    REDIS_DB: str = '0'
 
-    LISTEN_DOMAIN: str = "example.com"
-    NXDOMAINS:List[bytes] = [b"noexample.com"]
+    LISTEN_DOMAIN: str = 'example.com'
+    NXDOMAINS:List[bytes] = [b'noexample.com']
     class Config:
-        env_file = "switchboard.env"
-        env_file_encoding = "utf-8"
-        env_prefix = "CANARY_"
+        env_file = 'switchboard.env'
+        env_file_encoding = 'utf-8'
+        env_prefix = 'CANARY_'
 settings = Settings()
 
 switchboard = Switchboard()
@@ -173,11 +173,11 @@ class ServerDNSTestCase(unittest.TestCase):
     """
     def setUp(self) -> None:
         clear_db()
-        queries.add_canary_domain("one.example.com")
+        queries.add_canary_domain('one.example.com')
         #FIXME: Add a fixture to load expected values from a settings obj
-        queries.add_canary_domain("demo.com")
-        queries.add_canary_page("post.jsp")
-        queries.add_canary_path_element("tags")
+        queries.add_canary_domain('demo.com')
+        queries.add_canary_page('post.jsp')
+        queries.add_canary_path_element('tags')
         return super().setUp()
     def test_responseFromMessageNewMessage(self):
         """
@@ -187,7 +187,7 @@ class ServerDNSTestCase(unittest.TestCase):
         resolver = ChannelDNS(
             listen_domain=settings.LISTEN_DOMAIN,
             switchboard=switchboard,
-            settings = settings
+            settings = settings,
 
         )
         canarytoken = Canarytoken()
@@ -195,11 +195,11 @@ class ServerDNSTestCase(unittest.TestCase):
             type=TokenTypes.DNS,
             generate=True,
             alert_email_enabled=False,
-            alert_email_recipient="email@test.com",
+            alert_email_recipient='email@test.com',
             alert_webhook_enabled=False,
             alert_webhook_url=None,
             canarytoken=canarytoken,
-            memo="memo",
+            memo='memo',
             browser_scanner_enabled=False,
         )
         queries.save_canarydrop(cd)
@@ -208,7 +208,7 @@ class ServerDNSTestCase(unittest.TestCase):
         m = dns.Message()
         m.addQuery(cd.get_hostname().encode(), type=dns.A)
         query = m.queries[0]
-        query_result = resolver.query(query=query, src_ip="1.2.1.1").result
+        query_result = resolver.query(query=query, src_ip='1.2.1.1').result
         response_header = query_result[0][0]
 
         assert response_header.type == dns.A
