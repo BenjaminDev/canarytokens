@@ -12,8 +12,8 @@ import re
 # from canarytokens.canarydrop import Canarydrop
 from canarytokens.channel import InputChannel
 from canarytokens.constants import INPUT_CHANNEL_DNS
-# from exception import NoCanarytokenFound, NoCanarytokenPresent
-from canarytokens.queries import get_all_canary_domains, get_canarydrop
+from canarytokens.exceptions import NoCanarytokenFound, NoCanarytokenPresent
+from canarytokens import queries
 from canarytokens.tokens import handle_query_name
 
 # from exception import UnicodeDecodeError
@@ -23,11 +23,10 @@ from canarytokens.tokens import handle_query_name
 
 
 
-class DNSServerFactory(server.DNSServerFactory, object):
+class DNSServerFactory(server.DNSServerFactory):
     def handleQuery(self, message, protocol, address):
         if message.answer:
             return
-
         query = message.queries[0]
         if address:
             src_ip = address[0]
@@ -78,7 +77,9 @@ class ChannelDNS(InputChannel):
             switchboard=switchboard, name=self.CHANNEL, **kwargs
         )
         self.listen_domain = listen_domain
-        self.canary_domains = get_all_canary_domains()
+        #TODO: This should be passed in an not grabbed from redis
+        self.canary_domains = queries.get_all_canary_domains()
+        self.settings = kwargs["settings"]
 
     def _do_ns_response(self, name=None):
         """
@@ -92,7 +93,7 @@ class ChannelDNS(InputChannel):
         )
         additional = dns.RRHeader(
             name="ns1." + name,
-            payload=dns.Record_A(ttl=10, address=settings.PUBLIC_IP),
+            payload=dns.Record_A(ttl=10, address=self.settings.PUBLIC_IP),
             type=dns.A,
             auth=True,
         )
@@ -130,7 +131,7 @@ class ChannelDNS(InputChannel):
         """
         Calculate the response to a query.
         """
-        payload = dns.Record_A(ttl=10, address=settings.PUBLIC_IP)
+        payload = dns.Record_A(ttl=10, address=self.settings.PUBLIC_IP)
         answer = dns.RRHeader(name=name, payload=payload, type=dns.A, auth=True)
         answers = [answer]
         authority = []
@@ -152,9 +153,9 @@ class ChannelDNS(InputChannel):
         the fallback resolver.
         """
 
-        IS_NX_DOMAIN = True in [
-            query.name.name.lower().endswith(d) for d in settings.NXDOMAINS
-        ]
+        IS_NX_DOMAIN = any([
+            query.name.name.lower().endswith(d) for d in self.settings.NXDOMAINS
+        ])
 
         if (
             not True
@@ -172,20 +173,19 @@ class ChannelDNS(InputChannel):
         if query.type != dns.A:
             return defer.succeed(self._do_no_response(query=query))
 
-        try:
-            canarydrop, src_data = handle_query_name()
-            # TODO: What was the deal with this my_sql special case!
-            # Ignoring for now but needs a look see.
-            # if canarydrop._drop['type'] == 'my_sql':
-            #     d = deferLater(...)
 
-            self.dispatch(canarydrop=canarydrop, src_ip=src_ip, src_data=src_data)
+        canarydrop, src_data = handle_query_name(query_name=query.name)
+        # TODO: What was the deal with this my_sql special case!
+        # Ignoring for now but needs a look see.
+        # if canarydrop._drop['type'] == 'my_sql':
+        #     d = deferLater(...)
 
-        except (NoCanarytokenPresent, NoCanarytokenFound):
-            # If we dont find a canarytoken, lets just continue. No need to log.
-            pass
-        except Exception as e:
-            log.error(e)
+        self.dispatch(canarydrop=canarydrop, src_ip=src_ip, src_data=src_data)
+
+        # except (NoCanarytokenPresent, NoCanarytokenFound):
+        #     # If we dont find a canarytoken, lets just continue. No need to log.
+        #     pass
+
 
         if IS_NX_DOMAIN:
             return defer.fail(error.DomainError())

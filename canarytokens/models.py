@@ -60,6 +60,12 @@ class User(BaseModel):
     # alert_expiry -> attach this to a user or a token?
     # alert_limit -> attach this to a user or a token?
     # alert_count -> attach this to a user or a token?
+    def can_send_alert(self, canarydrop):
+        return True #TODO: user object may need some work.
+
+    def do_accounting(self, canarydrop):
+        # TODO: DESIGN: User object how should we manage them
+        return
 
 
 class Anonymous(User):

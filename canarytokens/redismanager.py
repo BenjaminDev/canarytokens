@@ -1,6 +1,8 @@
 import os
+from typing import Optional
 
 import redis
+from redis import StrictRedis
 
 from canarytokens.exceptions import RecreatingDBException
 
@@ -9,7 +11,15 @@ from canarytokens.exceptions import RecreatingDBException
 
 
 class DB:
-    __db = None
+    # HACK: there is a better way.
+    __db: Optional[StrictRedis] = None
+    __hostname: Optional[str] = None
+    __port: Optional[int] = None
+    @classmethod
+    def set_db_details(cls,hostname:str, port:int):
+        cls.__db = None
+        cls.__hostname = hostname
+        cls.__port = port
 
     @classmethod
     def get_db(cls):
@@ -17,7 +27,7 @@ class DB:
             return cls.__db
         else:
             # TODO: Fix settings / config this needs a global re think.
-            return cls.create_db(hostname="localhost", port=6379)
+            return cls.create_db(hostname=cls.__hostname, port=cls.__port)
 
     @classmethod
     def create_db(cls, *, hostname, port, logical_db=0):

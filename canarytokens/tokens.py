@@ -11,8 +11,8 @@ from typing import AnyStr, Dict, Tuple
 from canarytokens.exceptions import NoCanarytokenFound
 # from canarytokens.canarydrop import Canarydrop
 # from exception import NoCanarytokenFound
-from canarytokens.queries import get_canarydrop
-
+from canarytokens import queries
+from twisted.names.dns import Name
 
 class TokenTypes(enum.Enum):
     WEB = "web"
@@ -117,14 +117,13 @@ source_data_extractors = {
 }
 
 
-def handle_query_name(query_name: str) -> Tuple[Canarydrop, Dict[str, str]]:
+def handle_query_name(query_name: Name) -> Tuple[Canarydrop, Dict[str, str]]:
+    query_name = query_name.name.decode()
     token = Canarytoken(value=query_name)
 
-    canarydrop = get_canarydrop(canarytoken=token.value())
+    canarydrop = queries.get_canarydrop(canarytoken=token.value())
 
-    src_data = Canarytoken.look_for_source_data(
-        token=token.value(), query_name=query_name
-    )
+    src_data = Canarytoken.look_for_source_data(query_name=query_name)
     return canarydrop, src_data
 
 

@@ -10,6 +10,7 @@ import requests
 import simplejson
 from twisted.logger import Logger
 from twisted.web.client import getPage
+from canarytokens import models
 
 # import settings
 # from exception import LinkedInFailure
@@ -33,6 +34,8 @@ from canarytokens.redismanager import (DB, KEY_BITCOIN_ACCOUNT,
                                        KEY_LINKEDIN_ACCOUNTS,
                                        KEY_TOR_EXIT_NODES, KEY_USER_ACCOUNT,
                                        KEY_WEBHOOK_IDX, KEY_WIREGUARD_KEYMAP)
+from canarytokens import tokens
+
 
 # from canarytokens.canarydrop import Canarydrop
 
@@ -43,9 +46,13 @@ from canarytokens import canarydrop as cand
 
 def get_canarydrop(canarytoken: str) -> cand.Canarydrop:
     canarydrop = DB.get_db().hgetall(KEY_CANARYDROP + canarytoken)
-    if "triggered_list" in list(canarydrop.keys()):
-        canarydrop["triggered_list"] = simplejson.loads(canarydrop["triggered_list"])
-
+    # TODO: this should get handled by Canarydrop class
+    if "triggered_details" in list(canarydrop.keys()):
+        canarydrop["triggered_details"] = simplejson.loads(canarydrop["triggered_details"])
+    if "user" in canarydrop.keys():
+        # FIXME: short cut as users are not first class citizens yet.
+        canarydrop["user"] = models.Anonymous()
+    canarydrop["canarytoken"] = tokens.Canarytoken(canarytoken)
     return cand.Canarydrop(**canarydrop)
 
 
@@ -77,7 +84,7 @@ def add_canary_page(page=None):
 
 def get_all_canary_domains():
     # TODO: leave as a set?
-    return [o for o in DB.get_db().smembers(KEY_CANARY_DOMAINS)]
+    return [o.encode() for o in DB.get_db().smembers(KEY_CANARY_DOMAINS)]
 
 
 def get_all_canary_nxdomains():
@@ -674,7 +681,7 @@ def is_webhook_valid(url):
 
 def is_tor_relay(ip):
     if not DB.get_db().exists(KEY_TOR_EXIT_NODES):
-        update_tor_exit_nodes_loop()
+        update_tor_exit_nodes_loop() # FIXME: DESIGN: we call defered and expect a result in redis, Now!
     return DB.get_db().sismember(KEY_TOR_EXIT_NODES, simplejson.dumps(ip))
 
 
@@ -687,8 +694,10 @@ def update_tor_exit_nodes(contents):
 
 
 def update_tor_exit_nodes_loop():
-    d = getPage("https://check.torproject.org/exit-addresses")
-    d.addCallback(update_tor_exit_nodes)
+    # This breaks tests as it's an uncontrolled side effect
+    return
+    # d = getPage(b"https://check.torproject.org/exit-addresses")
+    # d.addCallback(update_tor_exit_nodes)
 
 
 def get_certificate(key, _type=None):

@@ -8,7 +8,7 @@ import simplejson
 from pydantic import BaseSettings
 from twisted.logger import Logger
 
-# from exception import DuplicateChannel
+from canarytokens.exceptions import DuplicateChannel
 
 log = Logger()
 
@@ -213,13 +213,8 @@ class OutputChannel(Channel):
     ):
         self.switchboard.add_output_channel(name=self.name, channel=self)
 
-    def send_alert(self, input_channel=None, canarydrop=None, **kwargs):
-        if not input_channel:
-            raise Exception("Cannot send an alert when the input_channel is None")
-
-        if not canarydrop:
-            raise Exception("Cannot send an alert when the canarydrop is None")
-
+    def send_alert(self, input_channel, canarydrop, **kwargs):
+        # TODO: get rid of that kwargs
         self.do_send_alert(input_channel=input_channel, canarydrop=canarydrop, **kwargs)
 
     def do_send_alert(self, **kwargs):
