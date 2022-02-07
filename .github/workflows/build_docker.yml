@@ -17,7 +17,6 @@ jobs:
 
   dev-deploy:
     runs-on: [self-hosted, dev]
-    needs: build
     steps:
       - name: Deploy to dev machine
         run: |
