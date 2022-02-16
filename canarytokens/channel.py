@@ -3,10 +3,12 @@ Base class for all canarydrop channels.
 """
 
 import datetime
+from typing import Dict
 
 import simplejson
 from pydantic import BaseSettings
 from twisted.logger import Logger
+from canarytokens.canarydrop import Canarydrop
 
 from canarytokens.exceptions import DuplicateChannel
 
@@ -41,17 +43,19 @@ class InputChannel(Channel):
     ):
         self.switchboard.add_input_channel(name=self.name, channel=self)
 
-    def format_additional_data(self, **kwargs):
-        return ''
+    # def format_additional_data(self, **kwargs):
+    #     return ''
 
     def format_webhook_canaryalert(
         self,
         canarydrop,
-        protocol,
-        host,
+        protocol='https',
+        host='localhost', #DESIGN: Shift this to settings. Do we need to have this logic here?
         **kwargs,
     ):
+
         payload = {}
+
         if not host or host == '':
             host = self.settings.PUBLIC_IP
 
@@ -73,8 +77,8 @@ class InputChannel(Channel):
     def format_slack_canaryalert(
         self,
         canarydrop,
-        protocol,
-        host,
+        host='localhost', #DESIGN:
+        protocol='https', # DESIGN: move this decision to settings
         **kwargs,
     ):
         payload = {}
@@ -197,8 +201,10 @@ Manage your settings for this Canarydrop:
             msg['from_address'] = self.settings.ALERT_EMAIL_FROM_ADDRESS
         return msg
 
-    def dispatch(self, **kwargs):
-        self.switchboard.dispatch(input_channel=self.name, **kwargs)
+    def dispatch(self,*,canarydrop, src_ip, src_data):
+        import asyncio
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.switchboard.dispatch(input_channel=self.name, canarydrop=canarydrop, src_ip=src_ip, src_data=src_data))
 
 
 class OutputChannel(Channel):
@@ -213,9 +219,9 @@ class OutputChannel(Channel):
     ):
         self.switchboard.add_output_channel(name=self.name, channel=self)
 
-    def send_alert(self, input_channel, canarydrop, **kwargs):
+    async def send_alert(self, input_channel, canarydrop: Canarydrop, src_ip:str, src_data:Dict[str, str]):
         # TODO: get rid of that kwargs
-        self.do_send_alert(input_channel=input_channel, canarydrop=canarydrop, **kwargs)
+        await self.do_send_alert(input_channel=input_channel, canarydrop=canarydrop, src_ip=src_ip, src_data=src_data)
 
     def do_send_alert(self, **kwargs):
         pass

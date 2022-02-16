@@ -15,10 +15,7 @@ from canarytokens.redismanager import DB
 from canarytokens.tokens import Canarytoken, TokenTypes
 from distutils.util import strtobool
 
-@pytest.fixture(scope='session', autouse=True)
-def clear_db():
-    redis_hostname = 'localhost' if strtobool(os.getenv('CI', 'False')) else 'redis'
-    DB.set_db_details(hostname=redis_hostname, port=6379)
+
 
 
 

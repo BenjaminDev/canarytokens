@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import List
 
 from pydantic import BaseSettings, conint
 
@@ -16,7 +17,8 @@ class Settings(BaseSettings):
     REDIS_DB: str = '0'
 
     LISTEN_DOMAIN: str
-
+    PUBLIC_IP: str
+    NXDOMAINS: List[bytes]
     class Config:
         env_file = 'switchboard.env'
         env_file_encoding = 'utf-8'

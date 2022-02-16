@@ -56,7 +56,6 @@ from canarytokens.tokens import Canarytoken, TokenTypes
 class Canarydrop(BaseModel):
     # TODO: model these bool, channel_detail pattern into a data class
     canarytoken: Canarytoken
-    triggered_count: int = 0
     triggered_details: Dict[str, Any] = {}
     memo: str
     created_at: datetime = datetime.now()
@@ -101,7 +100,7 @@ class Canarydrop(BaseModel):
             datetime: lambda v: v.strftime('%Y-%m-%dT%H:%M:%S'),
         }
 
-    def add_additional_info_to_hit(self, hit_time=None, additional_info={}):
+    def add_additional_info_to_hit(self, hit_time, additional_info):
         try:
             hit_time = hit_time or self._drop['hit_time']
         except:
@@ -114,17 +113,16 @@ class Canarydrop(BaseModel):
 
         queries.add_additional_info_to_hit(self.canarytoken, hit_time, additional_info)
 
-    def add_canarydrop_hit(self, input_channel='http', **kwargs):
-        # if "hit_time" in list(self._drop.keys()):
-        #     hit_time = self._drop["hit_time"]
-        # else:
-        #     hit_time = None
+    def add_canarydrop_hit(self, *, input_channel, src_ip, src_data):
+        hit_time = datetime.utcnow().strftime('%s.%f')
+
         # TODO: Review the timeline of a canarydrop hit.
         queries.add_canarydrop_hit(
             self.canarytoken,
             input_channel=input_channel,
-            hit_time=None,
-            **kwargs,
+            hit_time=hit_time,
+            src_ip=src_ip,
+            src_data=src_data,
         )
 
     def get_url_components(
@@ -141,6 +139,7 @@ class Canarydrop(BaseModel):
     ):
         """Return a URL generated at random with the saved Canarytoken.
         The random URL is also saved into the Canarydrop."""
+        if hasattr(self, 'generated_url'): return self.generated_url
         (sites, path_elements, pages) = self.get_url_components()
 
         generated_url = sites[random.randint(0, len(sites) - 1)] + '/'
@@ -152,14 +151,14 @@ class Canarydrop(BaseModel):
             elem = path_elements[random.randint(0, len(path_elements) - 1)]
             path.append(elem)
             path_elements.remove(elem)
-        path.append(self._drop['canarytoken'])
+        path.append(self.canarytoken.value())
 
         path.append(pages[random.randint(0, len(pages) - 1)])
         generated_url += '/'.join(path)
 
-        self._drop['generated_url'] = generated_url
+        self.generated_url = generated_url
 
-        return self._drop['generated_url']
+        return self.generated_url
 
     def get_random_site(
         self,
@@ -170,8 +169,8 @@ class Canarydrop(BaseModel):
     def get_url(
         self,
     ):
-        if 'generated_url' in self._drop:
-            return self._drop['generated_url']
+        # if 'generated_url' in self._drop:
+        #     return self._drop['generated_url']
         return self.generate_random_url()
 
     def generate_random_hostname(self, with_random=False, nxdomain=False):
@@ -322,7 +321,7 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
         else:
             return False
 
-    def alerting(self, input_channel=None, **kwargs):
+    def alerting(self):
         self.user.do_accounting(canarydrop=self)
 
     def __getitem__(self, key):
@@ -334,7 +333,7 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
 
     def get(self, *args):
         try:
-            return self._drop[args[0]]
+            return self[args[0]] # HACK: Removing ._drop in prgress
         except KeyError:
             if len(args) == 2:
                 return args[1]

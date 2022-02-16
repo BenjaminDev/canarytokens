@@ -175,7 +175,7 @@ def save_canarydrop(canarydrop):
         add_webhook_token_idx(canarydrop['alert_webhook_url'], canarytoken.value())
 
 
-def get_canarydrop_triggered_list(canarytoken):
+def get_canarydrop_triggered_list(canarytoken: tokens.Canarytoken):
     """
     Returns the triggered list for a Canarydrop, or {} if it does not exist
     """
@@ -189,43 +189,42 @@ def get_canarydrop_triggered_list(canarytoken):
         triggered_list = {
             k: v
             for k, v in triggered_list.items()
-            if k in sorted(triggered_list.keys())[-settings.MAX_HISTORY :]
+            if k in sorted(triggered_list.keys()) # DESGIN: limit this in redis, or api but not inbetween [-settings.MAX_HISTORY :]
         }
     return triggered_list
 
 
-def add_canarydrop_hit(canarytoken, input_channel, hit_time=None, **kwargs):
-    """Add a hit to a canarydrop
+def add_canarydrop_hit(canarytoken, input_channel, hit_time, **kwargs):
+    """
+    Add a hit to a canarydrop. A hit will capture the
     Arguments:
     canarytoken -- canarytoken object.
     **kwargs   -- Additional details about the hit.
     """
     triggered_list = get_canarydrop_triggered_list(canarytoken)
 
-    triggered_key = (
-        hit_time if hit_time else datetime.datetime.utcnow().strftime('%s.%f')
-    )
-    triggered_list[triggered_key] = kwargs
-    triggered_list[triggered_key]['input_channel'] = input_channel
+
+    triggered_list[hit_time] = kwargs
+    triggered_list[hit_time]['input_channel'] = input_channel
     if (
         kwargs.get('src_data', None)
         and 'aws_keys_event_source_ip' in kwargs['src_data']
     ):
-        triggered_list[triggered_key]['geo_info'] = get_geoinfo(
+        triggered_list[hit_time]['geo_info'] = get_geoinfo(
             kwargs['src_data']['aws_keys_event_source_ip'],
         )
-        triggered_list[triggered_key]['is_tor_relay'] = is_tor_relay(
+        triggered_list[hit_time]['is_tor_relay'] = is_tor_relay(
             kwargs['src_data']['aws_keys_event_source_ip'],
         )
     elif kwargs.get('src_ip', None):
-        triggered_list[triggered_key]['geo_info'] = get_geoinfo(kwargs['src_ip'])
-        triggered_list[triggered_key]['is_tor_relay'] = is_tor_relay(kwargs['src_ip'])
+        triggered_list[hit_time]['geo_info'] = get_geoinfo(kwargs['src_ip'])
+        triggered_list[hit_time]['is_tor_relay'] = is_tor_relay(kwargs['src_ip'])
     DB.get_db().hset(
         KEY_CANARYDROP + canarytoken.value(),
         'triggered_list',
         simplejson.dumps(triggered_list),
     )
-    return triggered_key
+    return hit_time
 
 
 def add_additional_info_to_hit(canarytoken, hit_time, additional_info=None):

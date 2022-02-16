@@ -9,12 +9,17 @@ from canarytokens.queries import (
     add_canary_domain, remove_canary_domain,
     save_canarydrop,
 )
-
+# from canarytokens.settings import Settings
+from canarytokens.redismanager import DB
+from canarytokens.tokens import TokenTypes
+# Settings.Config.env_file = "backend.env"
+# settings = Settings()
 app = FastAPI()
 
 
 @app.on_event('startup')
 def startup_event():
+    DB.set_db_details(hostname='redis', port=6379)
     remove_canary_domain()
     add_canary_domain(domain='127.0.0.1')
 
@@ -29,7 +34,7 @@ def generate(details: DNSTokenRequest) -> DNSTokenResponse:
         alert_email_recipient=details.email,
         alert_webhook_enabled=True,
         alert_webhook_url=details.webhook_url,
-        canarytoken=canarytoken.value(),
+        canarytoken=canarytoken,
         memo=details.memo,
         browser_scanner_enabled=False,
     )

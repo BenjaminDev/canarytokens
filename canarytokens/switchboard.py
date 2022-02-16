@@ -3,13 +3,15 @@ Class that receives alerts, and dispatches them to the registered endpoint.
 """
 
 from twisted.logger import Logger
+from canarytokens.canarydrop import Canarydrop
 
 log = Logger()
 
 from canarytokens.exceptions import DuplicateChannel, InvalidChannel
 
 
-class Switchboard(object):
+class Switchboard:
+    # DESIGN: Do we need this to be a class?
     def __init__(
         self,
     ):
@@ -26,8 +28,8 @@ class Switchboard(object):
         formatters -- a dict in the form { TYPE: METHOD,...} used to lookup
                       the channel's format method depending on the alert type
         """
-        if name in self.input_channels:
-            raise DuplicateChannel()
+        # if name in self.input_channels:
+        #     raise DuplicateChannel()
 
         self.input_channels[name] = channel
 
@@ -44,7 +46,7 @@ class Switchboard(object):
 
         self.output_channels[name] = channel
 
-    def dispatch(self, input_channel=None, canarydrop=None, **kwargs):
+    async def dispatch(self, input_channel:str, canarydrop:Canarydrop, src_ip, src_data):
         """Calls the correct alerting method for the trigger and channel combination.
 
         For now it prints to stdout.
@@ -56,11 +58,10 @@ class Switchboard(object):
         canarydrop -- a Canarydrop instance
         **kwargs -- passed to the channel instance's formatter methods
         """
-
         if input_channel not in self.input_channels:
             raise InvalidChannel()
 
-        canarydrop.add_canarydrop_hit(input_channel=input_channel, **kwargs)
+        canarydrop.add_canarydrop_hit(input_channel=input_channel, src_ip=src_ip, src_data=src_data)
 
         if not canarydrop.alertable():
             log.warn(
@@ -71,12 +72,15 @@ class Switchboard(object):
             return
 
         # update accounting info
-        canarydrop.alerting(input_channel=input_channel, **kwargs)
+        canarydrop.alerting()
 
         for requested_output_channel in canarydrop.get_requested_output_channels():
             output_channel = self.output_channels[requested_output_channel]
-            output_channel.send_alert(
+            # TODO: we can fire all these off in 'parallel'
+            await output_channel.send_alert(
                 canarydrop=canarydrop,
                 input_channel=self.input_channels[input_channel],
-                **kwargs,
+                # **kwargs,
+                src_ip=src_ip,
+                src_data=src_data,
             )

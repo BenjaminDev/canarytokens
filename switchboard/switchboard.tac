@@ -1,12 +1,17 @@
 
 # sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+import asyncio
+
+from twisted.internet import asyncioreactor
+asyncioreactor.install(asyncio.get_event_loop())
 from twisted.names import dns
 # TODO: see if this is still needed.
 # Removed for now
 # from caa_monkeypatch import monkey_patch_caa_support
 # monkey_patch_caa_support()
 
-
+from canarytokens.settings import Settings
+settings = Settings()
 from twisted.application import service, internet
 # DESIGN: Will add sentry for sending app errors to a central place.
 # from loghandlers import webhookLogObserver
@@ -32,15 +37,15 @@ from canarytokens.channel_output_webhook import WebhookOutputChannel
 from canarytokens.switchboard import Switchboard
 
 from canarytokens.queries import update_tor_exit_nodes_loop
-
+from canarytokens.redismanager import DB
+DB.set_db_details(settings.REDIS_HOST, settings.REDIS_PORT)
 application = service.Application('Canarydrops Switchboard')
 
 # f = logfile.LogFile.fromFullPath(settings.LOG_FILE, rotateLength=settings.SWITCHBOARD_LOG_SIZE,
 #                                  maxRotatedFiles=settings.SWITCHBOARD_LOG_COUNT)
 # globalLogPublisher.addObserver(textFileLogObserver(f))
 
-from settings import Settings
-settings = Settings()
+
 
 switchboard = Switchboard()
 

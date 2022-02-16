@@ -1,3 +1,4 @@
+from email.message import Message
 import socket
 from typing import List
 from unicodedata import name
@@ -14,16 +15,16 @@ import pytest
 import os
 
 # @pytest.fixture(scope="session", autouse=True)
-def clear_db():
-    redis_hostname = 'localhost' if strtobool(os.getenv('CI', 'False')) else 'redis'
-    DB.set_db_details(hostname=redis_hostname, port=6379)
-    redis = DB.get_db()
-    for key in redis.scan_iter():
-        redis.delete(key)
-    yield redis
+# def clear_db():
+#     redis_hostname = 'localhost' if strtobool(os.getenv('CI', 'False')) else 'redis'
+#     DB.set_db_details(hostname=redis_hostname, port=6379)
+#     redis = DB.get_db()
+#     for key in redis.scan_iter():
+#         redis.delete(key)
+#     yield redis
 
-    for key in redis.scan_iter():
-        redis.delete(key)
+#     for key in redis.scan_iter():
+#         redis.delete(key)
 # def justPayload(results):
 #     return [r.payload for r in results[0]]
 
@@ -172,17 +173,16 @@ class ServerDNSTestCase(unittest.TestCase):
     Test cases for DNS server and client.
     """
     def setUp(self) -> None:
-        clear_db()
+        # clear_db()
         queries.add_canary_domain('one.example.com')
         #FIXME: Add a fixture to load expected values from a settings obj
         queries.add_canary_domain('demo.com')
         queries.add_canary_page('post.jsp')
         queries.add_canary_path_element('tags')
         return super().setUp()
-    def test_responseFromMessageNewMessage(self):
+    def test_channel_dns_query(self):
         """
-        L{server.DNSServerFactory._responseFromMessage} generates a response
-        message which is a copy of the request message.
+        Test ChannelDNS.
         """
         resolver = ChannelDNS(
             listen_domain=settings.LISTEN_DOMAIN,
@@ -216,91 +216,11 @@ class ServerDNSTestCase(unittest.TestCase):
         assert socket.inet_ntoa(response_header.payload.address) == settings.PUBLIC_IP
 
         recovered_drop = queries.get_canarydrop(canarytoken.value())
-        # request = dns.Message(answer=False, recAv=False)
-        # response = (factory._responseFromMessage(message=request),)
 
-        # self.assertIsNot(request, response)
-    # def test_handleQuery(self):
-    #     """
-    #     L{server.DNSServerFactory.handleQuery} takes the first query from the
-    #     supplied message and dispatches it to
-    #     L{server.DNSServerFactory.resolver.query}.
-    #     """
-    #     m = dns.Message()
-    #     m.addQuery(b"one.example.com")
-    #     m.addQuery(b"two.example.com")
-    #     f = server.DNSServerFactory()
-    #     f.resolver = RaisingResolver()
-
-    #     e = self.assertRaises(
-    #         RaisingResolver.QueryArguments,
-    #         f.handleQuery,
-    #         message=m,
-    #         protocol=NoopProtocol(),
-    #         address=None,
-    #     )
-    #     (query,), kwargs = e.args
-    #     self.assertEqual(query, m.queries[0])
-    # def setUp(self):
-    #     self.factory = server.DNSServerFactory([
-    #         test_domain_com, reverse_domain, my_domain_com
-    #     ], verbose=2)
-
-    #     p = dns.DNSDatagramProtocol(self.factory)
-
-    #     while 1:
-    #         listenerTCP = reactor.listenTCP(0, self.factory, interface="127.0.0.1")
-    #         # It's simpler to do the stop listening with addCleanup,
-    #         # even though we might not end up using this TCP port in
-    #         # the test (if the listenUDP below fails).  Cleaning up
-    #         # this TCP port sooner than "cleanup time" would mean
-    #         # adding more code to keep track of the Deferred returned
-    #         # by stopListening.
-    #         self.addCleanup(listenerTCP.stopListening)
-    #         port = listenerTCP.getHost().port
-
-    #         try:
-    #             listenerUDP = reactor.listenUDP(port, p, interface="127.0.0.1")
-    #         except error.CannotListenError:
-    #             pass
-    #         else:
-    #             self.addCleanup(listenerUDP.stopListening)
-    #             break
-
-    #     self.listenerTCP = listenerTCP
-    #     self.listenerUDP = listenerUDP
-    #     self.resolver = client.Resolver(servers=[('127.0.0.1', port)])
-
-
-    # def tearDown(self):
-    #     """
-    #     Clean up any server connections associated with the
-    #     L{DNSServerFactory} created in L{setUp}
-    #     """
-    #     # It'd be great if DNSServerFactory had a method that
-    #     # encapsulated this task.  At least the necessary data is
-    #     # available, though.
-    #     for conn in self.factory.connections[:]:
-    #         conn.transport.loseConnection()
-    # def namesTest(self, d, r):
-    #     self.response = None
-    #     def setDone(response):
-    #         self.response = response
-
-    #     def checkResults(ignored):
-    #         if isinstance(self.response, failure.Failure):
-    #             raise self.response
-    #         results = justPayload(self.response)
-    #         assert len(results) == len(r), "%s != %s" % (map(str, results), map(str, r))
-    #         for rec in results:
-    #             assert rec in r, "%s not in %s" % (rec, map(str, r))
-
-    #     d.addBoth(setDone)
-    #     d.addCallback(checkResults)
-    #     return d
-    # def testAddressRecord1(self):
-    #     """Test simple DNS 'A' record queries"""
-    #     return self.namesTest(
-    #         self.resolver.lookupAddress('test-domain.com'),
-    #         [dns.Record_A('127.0.0.1', ttl=19283784)]
-    #     )
+@pytest.mark.asyncio(asyncio_mode='strict')
+def test_DNS_server_factory():
+    dns_factory = DNSServerFactory()
+    m = dns.Message()
+    m.addQuery(name='example.com', type=dns.MX)
+    m.addQuery(name='example.com', type=dns.AAAA)
+    dns_factory.handleQuery(message=m, protocol=None, address=('2.2.2.4', '53'))

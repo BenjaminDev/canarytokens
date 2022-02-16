@@ -19,9 +19,10 @@ pyblake2 = "^1.1.2"
 Jinja2 = "^3.0.3"
 pyOpenSSL = "^21.0.0"
 service-identity = "^21.1.0"
-pydantic = {extras = ["email"], version = "^1.9.0"}
+pydantic = {extras = ["dotenv", "email"], version = "^1.9.0"}
 fastapi = "^0.73.0"
 uvicorn = "^0.17.1"
+httpx = {extras = ["http2"], version = "^0.22.0"}
 
 [tool.poetry.dev-dependencies]
 black = "^21.12b0"
@@ -29,6 +30,8 @@ isort = "^5.10.1"
 pre-commit = "^2.17.0"
 pytest = "^6.2.5"
 coverage = "^6.3"
+pytest-twisted = "^1.13.4"
+pytest-asyncio = "^0.17.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

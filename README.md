@@ -97,6 +97,8 @@ This is tunable with the switchboard ENV variable `CANARY_MAX_ALERTS_PER_MINUTE`
 
 
 poetry run twistd -noy switchboard.tac --pidfile=switchboard.pid
+dig @127.0.0.1 -p 5354 google.com
+
 poetry run twistd -noy frontend.tac --pidfile=frontend.pid
 
 poetry run coverage run -m pytest tests
