@@ -44,6 +44,6 @@ jobs:
         continue-on-error: true
         run: |
           poetry run coverage run --source=./canarytokens -m pytest tests/
-      - name: Check coverage is over 10 percent
+      - name: Check coverage is over 60 percent
         run: |
-          poetry run coverage report --fail-under 10
+          poetry run coverage report --fail-under 60
