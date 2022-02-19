@@ -9,10 +9,12 @@ from turtle import st
 from typing import AnyStr, Dict, Tuple
 
 from canarytokens.exceptions import NoCanarytokenFound
+
 # from canarytokens.canarydrop import Canarydrop
 # from exception import NoCanarytokenFound
 from canarytokens import queries
 from twisted.names.dns import Name
+
 
 class TokenTypes(enum.Enum):
     WEB = 'web'
@@ -82,6 +84,7 @@ canarytoken_LENGTH = 25  # equivalent to 128-bit id
 
 # TODO: put these in a nicer place. Ensure re.compile is called only once at startup
 # add a naming convention for easy reading when seen in other files.
+# Check that state is not stored in these eg: x=re.compile(...) x.match() === A and then x.match() === A still
 sql_server_username = re.compile(
     r'([A-Za-z0-9.-]*)\.[0-9]{2}\.',
     re.IGNORECASE,

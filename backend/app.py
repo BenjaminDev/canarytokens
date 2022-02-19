@@ -6,12 +6,15 @@ from pydantic import BaseModel
 from canarytokens.canarydrop import Canarydrop, Canarytoken
 from canarytokens.models import DNSTokenRequest, DNSTokenResponse
 from canarytokens.queries import (
-    add_canary_domain, remove_canary_domain,
+    add_canary_domain,
+    remove_canary_domain,
     save_canarydrop,
 )
+
 # from canarytokens.settings import Settings
 from canarytokens.redismanager import DB
 from canarytokens.tokens import TokenTypes
+
 # Settings.Config.env_file = "backend.env"
 # settings = Settings()
 app = FastAPI()

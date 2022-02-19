@@ -2,8 +2,10 @@
 Class that receives alerts, and dispatches them to the registered endpoint.
 """
 
+from typing import Dict
 from twisted.logger import Logger
 from canarytokens.canarydrop import Canarydrop
+from canarytokens import channel
 
 log = Logger()
 
@@ -17,7 +19,7 @@ class Switchboard:
     ):
         """Return a new Switchboard instance."""
         self.input_channels = {}
-        self.output_channels = {}
+        self.output_channels: Dict[str, channel.OutputChannel] = {}
         log.info('Canarytokens switchboard started')
 
     def add_input_channel(self, name=None, channel=None):
@@ -46,7 +48,9 @@ class Switchboard:
 
         self.output_channels[name] = channel
 
-    async def dispatch(self, input_channel:str, canarydrop:Canarydrop, src_ip, src_data):
+    async def dispatch(
+        self, input_channel: str, canarydrop: Canarydrop, src_ip, src_data,
+    ):
         """Calls the correct alerting method for the trigger and channel combination.
 
         For now it prints to stdout.
@@ -61,7 +65,9 @@ class Switchboard:
         if input_channel not in self.input_channels:
             raise InvalidChannel()
 
-        canarydrop.add_canarydrop_hit(input_channel=input_channel, src_ip=src_ip, src_data=src_data)
+        canarydrop.add_canarydrop_hit(
+            input_channel=input_channel, src_ip=src_ip, src_data=src_data,
+        )
 
         if not canarydrop.alertable():
             log.warn(

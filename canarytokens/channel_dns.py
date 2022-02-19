@@ -21,8 +21,6 @@ from canarytokens.tokens import handle_query_name
 # import settings
 
 
-
-
 class DNSServerFactory(server.DNSServerFactory):
     def handleQuery(self, message, protocol, address):
         if message.answer:
@@ -71,13 +69,18 @@ class ChannelDNS(InputChannel):
     CHANNEL = INPUT_CHANNEL_DNS
 
     def __init__(
-        self, listen_domain='canary.thinknest.com', switchboard=None, **kwargs,
+        self,
+        listen_domain='canary.thinknest.com',
+        switchboard=None,
+        **kwargs,
     ):
         super(ChannelDNS, self).__init__(
-            switchboard=switchboard, name=self.CHANNEL, **kwargs,
+            switchboard=switchboard,
+            name=self.CHANNEL,
+            **kwargs,
         )
         self.listen_domain = listen_domain
-        #TODO: This should be passed in an not grabbed from redis
+        # TODO: This should be passed in an not grabbed from redis
         self.canary_domains = queries.get_all_canary_domains()
         self.settings = kwargs['settings']
 
@@ -153,9 +156,9 @@ class ChannelDNS(InputChannel):
         the fallback resolver.
         """
 
-        IS_NX_DOMAIN = any([
-            query.name.name.lower().endswith(d) for d in self.settings.NXDOMAINS
-        ])
+        IS_NX_DOMAIN = any(
+            [query.name.name.lower().endswith(d) for d in self.settings.NXDOMAINS],
+        )
 
         if (
             not True
@@ -173,7 +176,6 @@ class ChannelDNS(InputChannel):
         if query.type != dns.A:
             return defer.succeed(self._do_no_response(query=query))
 
-
         canarydrop, src_data = handle_query_name(query_name=query.name)
         # TODO: What was the deal with this my_sql special case!
         # Ignoring for now but needs a look see.
@@ -185,7 +187,6 @@ class ChannelDNS(InputChannel):
         # except (NoCanarytokenPresent, NoCanarytokenFound):
         #     # If we dont find a canarytoken, lets just continue. No need to log.
         #     pass
-
 
         if IS_NX_DOMAIN:
             return defer.fail(error.DomainError())

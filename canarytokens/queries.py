@@ -15,26 +15,32 @@ from canarytokens import models
 # import settings
 # from exception import LinkedInFailure
 from canarytokens.redismanager import (
-    DB, KEY_BITCOIN_ACCOUNT,
+    DB,
+    KEY_BITCOIN_ACCOUNT,
     KEY_BITCOIN_ACCOUNTS,
     KEY_CANARY_DOMAINS,
     KEY_CANARY_GOOGLE_API_KEY,
     KEY_CANARY_IP_CACHE,
-    KEY_CANARY_NXDOMAINS, KEY_CANARY_PAGES,
+    KEY_CANARY_NXDOMAINS,
+    KEY_CANARY_PAGES,
     KEY_CANARY_PATH_ELEMENTS,
     KEY_CANARYDROP,
     KEY_CANARYDROPS_TIMELINE,
     KEY_CANARYTOKEN_ALERT_COUNT,
     KEY_CLONEDSITE_TOKEN,
-    KEY_CLONEDSITE_TOKENS, KEY_EMAIL_IDX,
-    KEY_IMGUR_TOKEN, KEY_IMGUR_TOKENS,
+    KEY_CLONEDSITE_TOKENS,
+    KEY_EMAIL_IDX,
+    KEY_IMGUR_TOKEN,
+    KEY_IMGUR_TOKENS,
     KEY_KUBECONFIG_CERTS,
     KEY_KUBECONFIG_HITS,
     KEY_KUBECONFIG_SERVEREP,
     KEY_LINKEDIN_ACCOUNT,
     KEY_LINKEDIN_ACCOUNTS,
-    KEY_TOR_EXIT_NODES, KEY_USER_ACCOUNT,
-    KEY_WEBHOOK_IDX, KEY_WIREGUARD_KEYMAP,
+    KEY_TOR_EXIT_NODES,
+    KEY_USER_ACCOUNT,
+    KEY_WEBHOOK_IDX,
+    KEY_WIREGUARD_KEYMAP,
 )
 from canarytokens import tokens
 
@@ -50,7 +56,9 @@ def get_canarydrop(canarytoken: str) -> cand.Canarydrop:
     canarydrop = DB.get_db().hgetall(KEY_CANARYDROP + canarytoken)
     # TODO: this should get handled by Canarydrop class
     if 'triggered_details' in list(canarydrop.keys()):
-        canarydrop['triggered_details'] = simplejson.loads(canarydrop['triggered_details'])
+        canarydrop['triggered_details'] = simplejson.loads(
+            canarydrop['triggered_details'],
+        )
     if 'user' in canarydrop.keys():
         # FIXME: short cut as users are not first class citizens yet.
         canarydrop['user'] = models.Anonymous()
@@ -158,7 +166,8 @@ def save_canarydrop(canarydrop):
 
     canarytoken = canarydrop.canarytoken
     DB.get_db().hset(
-        KEY_CANARYDROP + canarytoken.value(), mapping=canarydrop.serialize(),
+        KEY_CANARYDROP + canarytoken.value(),
+        mapping=canarydrop.serialize(),
     )
 
     log.info('Saved canarydrop: {canarydrop}'.format(canarydrop=canarydrop.serialize()))
@@ -189,7 +198,10 @@ def get_canarydrop_triggered_list(canarytoken: tokens.Canarytoken):
         triggered_list = {
             k: v
             for k, v in triggered_list.items()
-            if k in sorted(triggered_list.keys()) # DESGIN: limit this in redis, or api but not inbetween [-settings.MAX_HISTORY :]
+            if k
+            in sorted(
+                triggered_list.keys(),
+            )  # DESGIN: limit this in redis, or api but not inbetween [-settings.MAX_HISTORY :]
         }
     return triggered_list
 
@@ -202,7 +214,6 @@ def add_canarydrop_hit(canarytoken, input_channel, hit_time, **kwargs):
     **kwargs   -- Additional details about the hit.
     """
     triggered_list = get_canarydrop_triggered_list(canarytoken)
-
 
     triggered_list[hit_time] = kwargs
     triggered_list[hit_time]['input_channel'] = input_channel
@@ -359,7 +370,9 @@ def get_canarydrops(min_time='-inf', max_time='+inf'):
     """
     canarydrops = []
     for canarytoken in DB.get_db().zrangebyscore(
-        KEY_CANARYDROPS_TIMELINE, min_time, max_time,
+        KEY_CANARYDROPS_TIMELINE,
+        min_time,
+        max_time,
     ):
         canarydrops.append(Canarydrop(**get_canarydrop(canarytoken=canarytoken)))
     return canarydrops
@@ -375,7 +388,9 @@ def get_canarydrops_array(min_time='-inf', max_time='+inf'):
     """
     canarydrops = []
     for canarytoken in DB.get_db().zrangebyscore(
-        KEY_CANARYDROPS_TIMELINE, min_time, max_time,
+        KEY_CANARYDROPS_TIMELINE,
+        min_time,
+        max_time,
     ):
         canarydrops.append(get_canarydrop(canarytoken=canarytoken))
     return canarydrops
@@ -682,7 +697,7 @@ def is_webhook_valid(url):
 
 def is_tor_relay(ip):
     if not DB.get_db().exists(KEY_TOR_EXIT_NODES):
-        update_tor_exit_nodes_loop() # FIXME: DESIGN: we call defered and expect a result in redis, Now!
+        update_tor_exit_nodes_loop()  # FIXME: DESIGN: we call defered and expect a result in redis, Now!
     return DB.get_db().sismember(KEY_TOR_EXIT_NODES, simplejson.dumps(ip))
 
 

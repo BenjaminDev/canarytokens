@@ -26,11 +26,13 @@ from canarytokens.constants import (
     OUTPUT_CHANNEL_WEBHOOK,
 )
 from canarytokens.exceptions import (
-    NoCanarytokenPresent, NoUser,
+    NoCanarytokenPresent,
+    NoUser,
     UnknownAttribute,
 )
 from canarytokens.models import Anonymous, User
 from canarytokens import queries
+
 #  import (add_additional_info_to_hit,
 #                                   add_canarydrop_hit, get_all_canary_domains,
 #                                   get_all_canary_nxdomains,
@@ -52,7 +54,6 @@ from canarytokens.tokens import Canarytoken, TokenTypes
 # class
 
 
-
 class Canarydrop(BaseModel):
     # TODO: model these bool, channel_detail pattern into a data class
     canarytoken: Canarytoken
@@ -60,15 +61,15 @@ class Canarydrop(BaseModel):
     memo: str
     created_at: datetime = datetime.now()
     auth: str = md5(
-                str(
-                    random.SystemRandom().randrange(start=1, stop=2 ** 128, step=2),
-                ).encode(),
+        str(
+            random.SystemRandom().randrange(start=1, stop=2 ** 128, step=2),
+        ).encode(),
     ).hexdigest()
     type: TokenTypes
     user: Union[User, Anonymous] = Anonymous()
 
     # Alerting details
-    alert_email_enabled: bool  = False
+    alert_email_enabled: bool = False
     alert_email_recipient: EmailStr
     alert_sms_enabled: bool = False
     alert_sms_recipient: Optional[str] = None
@@ -139,7 +140,8 @@ class Canarydrop(BaseModel):
     ):
         """Return a URL generated at random with the saved Canarytoken.
         The random URL is also saved into the Canarydrop."""
-        if hasattr(self, 'generated_url'): return self.generated_url
+        if hasattr(self, 'generated_url'):
+            return self.generated_url
         (sites, path_elements, pages) = self.get_url_components()
 
         generated_url = sites[random.randint(0, len(sites) - 1)] + '/'
@@ -266,11 +268,6 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
         qrcode = pyqrcode.create(wg_conf).png_as_base64_str(scale=2)
         return 'data:image/png;base64,{}'.format(qrcode)
 
-
-
-
-
-
     def serialize(
         self,
     ):
@@ -278,7 +275,9 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
         into redis."""
         # TODO: rip out the _drop make this a dataclass or pydantic class
         # DESIGN: this needs a re-work. defering until tests passing and coverage is high.
-        serialized = json.loads(self.json(exclude={'canarytoken'})) # TODO: check https://github.com/samuelcolvin/pydantic/issues/1409 and swap out when possible
+        serialized = json.loads(
+            self.json(exclude={'canarytoken'}),
+        )  # TODO: check https://github.com/samuelcolvin/pydantic/issues/1409 and swap out when possible
 
         # serialized = self._drop.copy()
         serialized['type'] = str(serialized['type'])
@@ -325,7 +324,7 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
         self.user.do_accounting(canarydrop=self)
 
     def __getitem__(self, key):
-        #TODO: remove __getitem__ but for now we hack it!
+        # TODO: remove __getitem__ but for now we hack it!
         return getattr(self, key)
 
     def __setitem__(self, key, value):
@@ -333,7 +332,7 @@ if (document.domain != "CLONED_SITE_DOMAIN" && document.domain != "www.CLONED_SI
 
     def get(self, *args):
         try:
-            return self[args[0]] # HACK: Removing ._drop in prgress
+            return self[args[0]]  # HACK: Removing ._drop in prgress
         except KeyError:
             if len(args) == 2:
                 return args[1]

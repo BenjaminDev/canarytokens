@@ -9,14 +9,14 @@ from canarytokens.exceptions import RecreatingDBException
 # import settings
 
 
-
 class DB:
     # HACK: there is a better way.
     __db: Optional[StrictRedis] = None
     __hostname: Optional[str] = None
     __port: Optional[int] = None
+
     @classmethod
-    def set_db_details(cls,hostname:str, port:int):
+    def set_db_details(cls, hostname: str, port: int):
         cls.__db = None
         cls.__hostname = hostname
         cls.__port = port

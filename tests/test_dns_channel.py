@@ -146,40 +146,48 @@ from canarytokens import canarydrop
 from canarytokens.tokens import Canarytoken, TokenTypes
 from canarytokens.switchboard import Switchboard
 from pydantic import BaseSettings, conint
+
+
 class Settings(BaseSettings):
     CHANNEL_DNS_PORT: conint(gt=0, lt=65535) = 5354
     CHANNEL_HTTP_PORT: conint(gt=0, lt=65535) = 8083
     CHANNEL_SMTP_PORT: conint(gt=0, lt=65535) = 2500
     CHANNEL_MYSQL_PORT: conint(gt=0, lt=65535) = 6033
 
-    PUBLIC_IP:str = '10.0.1.3'
+    PUBLIC_IP: str = '10.0.1.3'
 
     REDIS_HOST: str = 'redis'
     REDIS_PORT: conint(gt=0, lt=65535) = 6379
     REDIS_DB: str = '0'
 
     LISTEN_DOMAIN: str = 'example.com'
-    NXDOMAINS:List[bytes] = [b'noexample.com']
+    NXDOMAINS: List[bytes] = [b'noexample.com']
+
     class Config:
         env_file = 'switchboard.env'
         env_file_encoding = 'utf-8'
         env_prefix = 'CANARY_'
+
+
 settings = Settings()
 
 switchboard = Switchboard()
+
 
 class ServerDNSTestCase(unittest.TestCase):
     """
     Test cases for DNS server and client.
     """
+
     def setUp(self) -> None:
         # clear_db()
         queries.add_canary_domain('one.example.com')
-        #FIXME: Add a fixture to load expected values from a settings obj
+        # FIXME: Add a fixture to load expected values from a settings obj
         queries.add_canary_domain('demo.com')
         queries.add_canary_page('post.jsp')
         queries.add_canary_path_element('tags')
         return super().setUp()
+
     def test_channel_dns_query(self):
         """
         Test ChannelDNS.
@@ -187,8 +195,7 @@ class ServerDNSTestCase(unittest.TestCase):
         resolver = ChannelDNS(
             listen_domain=settings.LISTEN_DOMAIN,
             switchboard=switchboard,
-            settings = settings,
-
+            settings=settings,
         )
         canarytoken = Canarytoken()
         cd = canarydrop.Canarydrop(
@@ -204,7 +211,6 @@ class ServerDNSTestCase(unittest.TestCase):
         )
         queries.save_canarydrop(cd)
 
-
         m = dns.Message()
         m.addQuery(cd.get_hostname().encode(), type=dns.A)
         query = m.queries[0]
@@ -216,6 +222,7 @@ class ServerDNSTestCase(unittest.TestCase):
         assert socket.inet_ntoa(response_header.payload.address) == settings.PUBLIC_IP
 
         recovered_drop = queries.get_canarydrop(canarytoken.value())
+
 
 @pytest.mark.asyncio(asyncio_mode='strict')
 def test_DNS_server_factory():

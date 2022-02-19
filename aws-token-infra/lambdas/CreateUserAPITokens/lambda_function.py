@@ -35,7 +35,8 @@ def send_slack(resp=None):
         data = {
             'text': 'Newly Created AWS ID Token. Details are:\n'
             + 'Username: {u}, \nAccessKeyId: {aid}'.format(
-                u=resp['data'], aid=resp['access_key_id'][:8],
+                u=resp['data'],
+                aid=resp['access_key_id'][:8],
             ),
         }
     data = json.dumps(data)

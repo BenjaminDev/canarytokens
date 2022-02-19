@@ -30,10 +30,12 @@ def settings():
     # Settings.NXDOMAINS = [b'noexample.com']
     # Settings.PUBLIC_IP = '10.0.1.3'
     return Settings(
-        LISTEN_DOMAIN = 'example.com',
-            NXDOMAINS = [b'noexample.com'],
-            PUBLIC_IP = '10.0.1.3',
+        LISTEN_DOMAIN='example.com',
+        NXDOMAINS=[b'noexample.com'],
+        PUBLIC_IP='10.0.1.3',
     )
+
+
 @pytest.fixture(scope='session', autouse=True)
 def clear_db():
     redis_hostname = 'localhost' if strtobool(os.getenv('CI', 'False')) else 'redis'
